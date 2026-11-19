@@ -7,11 +7,25 @@ import UIKit
 /// pixel per VFD cell and enlarged with nearest-neighbour filtering, so everything is drawn with
 /// the same square pixels. A pass-through window on top draws the dark gaps between pixels,
 /// aligned to the same grid, plus the tube vignette.
-final class VFDDisplay {
+final class VFDDisplay: NSObject {
     static let shared = VFDDisplay()
     private var gridWindow: UIWindow?
+    private var link: CADisplayLink?
+    private var active = false
 
     func apply(_ on: Bool) {
+        active = on
+        if on, link == nil {
+            // Keep every layer point-sampled while the theme is on: each VFD cell takes the colour
+            // at its centre instead of an average, so pixel-font text stays crisp (on or off).
+            let l = CADisplayLink(target: self, selector: #selector(tick))
+            l.preferredFrameRateRange = CAFrameRateRange(minimum: 10, maximum: 30, preferred: 20)
+            l.add(to: .main, forMode: .common)
+            link = l
+        } else if !on {
+            link?.invalidate(); link = nil
+        }
+        walkAll(nearest: on)
         for scene in UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }) {
             for window in scene.windows where window !== gridWindow {
                 let layer = window.layer
@@ -37,6 +51,23 @@ final class VFDDisplay {
                 gridWindow = nil
             }
         }
+    }
+}
+
+extension VFDDisplay {
+    @objc private func tick() { if active { walkAll(nearest: true) } }
+
+    private func walkAll(nearest: Bool) {
+        for scene in UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }) {
+            for window in scene.windows where window !== gridWindow { walk(window.layer, nearest) }
+        }
+    }
+
+    private func walk(_ layer: CALayer, _ nearest: Bool) {
+        let filter: CALayerContentsFilter = nearest ? .nearest : .linear
+        if layer.minificationFilter != filter { layer.minificationFilter = filter }
+        if nearest, layer.magnificationFilter != .nearest { layer.magnificationFilter = .nearest }
+        layer.sublayers?.forEach { walk($0, nearest) }
     }
 }
 
