@@ -172,10 +172,14 @@ struct SignalBars: View {
     var stale: Bool
     var body: some View {
         let level = rssi > -60 ? 4 : rssi > -70 ? 3 : rssi > -80 ? 2 : 1
+        if Theme.isVFD {
+            PixelSignal(level: stale ? 0 : level)
+        } else {
         HStack(alignment: .bottom, spacing: 2) {
             ForEach(1...4, id: \.self) { i in
                 RoundedRectangle(cornerRadius: 1).fill(i <= level && !stale ? Theme.alien : Theme.text.opacity(0.2)).frame(width: 3, height: CGFloat(3 + i * 3))
             }
+        }
         }
     }
 }
@@ -184,10 +188,14 @@ struct BatteryIcon: View {
     var level: Int
     var body: some View {
         let sym = level > 75 ? "battery.100" : level > 50 ? "battery.75" : level > 25 ? "battery.50" : level > 10 ? "battery.25" : "battery.0"
+        if Theme.isVFD {
+            Text("BAT\(level)%").font(Theme.vfdFont).foregroundStyle(level > 20 ? Theme.textDim : Theme.danger)
+        } else {
         HStack(spacing: 2) {
             Image(systemName: sym).foregroundStyle(level > 20 ? Theme.textDim : Theme.danger)
             Text("\(level)%").font(Theme.font(.caption2)).foregroundStyle(Theme.textDim)
         }
         .font(Theme.font(.caption))
+        }
     }
 }

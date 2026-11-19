@@ -21,6 +21,14 @@ struct WeighInView: View {
                 VStack(spacing: 14) {
                     XenoCard(glow: Theme.beam) {
                         VStack(spacing: 10) {
+                            if Theme.isVFD {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text(charged.map { lbOz($0) } ?? "––").font(Theme.vfdFontBig)
+                                    Text("OF \(lbOz(target))").font(Theme.vfdFont).foregroundStyle(Theme.textDim)
+                                    PixelBar(marker: progress, fillToMarker: true, color: progress >= 1 ? Theme.alien : Theme.beam)
+                                        .frame(height: Theme.vfdPixel * 6)
+                                }
+                            } else {
                             ZStack {
                                 Circle().stroke(Theme.text.opacity(0.08), lineWidth: 16)
                                 Circle().trim(from: 0, to: progress).stroke(progress >= 1 ? Theme.alien : Theme.beam, style: StrokeStyle(lineWidth: 16, lineCap: .round))
@@ -32,6 +40,7 @@ struct WeighInView: View {
                             }
                             .frame(width: 210, height: 210)
                             .padding(.vertical, 6)
+                            }
                             if let charged, charged >= target, target > 0 {
                                 Text("TARGET REACHED: close the valve").font(Theme.font(.headline)).foregroundStyle(Theme.alien)
                             }

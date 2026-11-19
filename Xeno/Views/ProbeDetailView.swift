@@ -121,6 +121,14 @@ struct SeriesChart: View {
 
     var body: some View {
         let s = model.settings
+        if Theme.isVFD {
+            PixelChart(values: samples.map { convert($0.value, s) }, threshold: threshold.map { convert($0, s) }, logScale: logScale, color: color)
+        } else {
+            vectorChart(s)
+        }
+    }
+
+    func vectorChart(_ s: XenoSettings) -> some View {
         Chart {
             ForEach(Array(samples.filter { !logScale || $0.value > 0 }.enumerated()), id: \.offset) { _, p in
                 LineMark(x: .value("Time", p.t), y: .value("Value", convert(p.value, s)))

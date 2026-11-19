@@ -108,6 +108,23 @@ struct MicronScale: View {
     var microns: Double?
     var target: Double
     var body: some View {
+        if Theme.isVFD {
+            VStack(spacing: 2) {
+                PixelBar(marker: microns.map { pos($0) }, zone: 0...pos(target), color: Theme.text)
+                    .frame(height: Theme.vfdPixel * 5)
+                HStack {
+                    Text("50"); Spacer(); Text("500"); Spacer(); Text("5K"); Spacer(); Text("25K")
+                }
+                .font(Theme.vfdFont).foregroundStyle(Theme.textDim)
+            }
+        } else {
+            vector
+        }
+    }
+
+    func pos(_ m: Double) -> Double { (log10(max(50, min(25000, m))) - log10(50)) / (log10(25000) - log10(50)) }
+
+    var vector: some View {
         GeometryReader { g in
             let w = g.size.width
             let x: (Double) -> CGFloat = { m in CGFloat((log10(max(50, min(25000, m))) - log10(50)) / (log10(25000) - log10(50))) * w }

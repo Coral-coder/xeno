@@ -104,6 +104,12 @@ struct TargetGauge: View {
                     .glow(color: status.opacity(0.6), radius: 10)
                 Text(unit).font(Theme.font(.callout)).foregroundStyle(Theme.textDim)
             }
+            if Theme.isVFD {
+                let span = max(tolerance * 5, 10)
+                PixelBar(marker: (value != nil && target != nil) ? (value! - target!) / span * 0.5 + 0.5 : nil,
+                         zone: 0.35...0.65, color: status)
+                    .frame(height: Theme.vfdPixel * 5)
+            } else {
             GeometryReader { g in
                 let w = g.size.width
                 ZStack(alignment: .leading) {
@@ -118,6 +124,7 @@ struct TargetGauge: View {
                 }
             }
             .frame(height: 12)
+            }
         }
     }
 
