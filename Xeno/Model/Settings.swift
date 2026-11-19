@@ -1,5 +1,13 @@
 import Foundation
 
+enum ThemeKind: String, Codable, CaseIterable, Identifiable {
+    case biolume, vfd
+    var id: String { rawValue }
+    var title: String { self == .biolume ? "Bioluminescent" : "Amber VFD" }
+    var subtitle: String { self == .biolume ? "Organic alien-ship interface" : "Retro vacuum-fluorescent dot matrix" }
+}
+
+
 struct XenoSettings: Codable, Equatable {
     var temperatureUnit: TemperatureUnit = .fahrenheit
     var pressureUnit: PressureUnit = .psig

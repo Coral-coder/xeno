@@ -1,4 +1,4 @@
-import SwiftUI
+import Foundation
 
 /// A VFD frame: a grid of cells, each unlit (0) or lit with a palette colour. Screens draw into
 /// it in whole cells (text from bitmap glyphs, boxes, bars), so every pixel on screen sits on
@@ -6,16 +6,6 @@ import SwiftUI
 enum VFDColor: UInt8 {
     case off = 0, amber, white, dim, red, green
 
-    var color: Color {
-        switch self {
-        case .off: return .clear
-        case .amber: return Color(red: 1.0, green: 0.69, blue: 0.08)
-        case .white: return Color(red: 1.0, green: 0.91, blue: 0.77)
-        case .dim: return Color(red: 0.59, green: 0.39, blue: 0.16)
-        case .red: return Color(red: 1.0, green: 0.31, blue: 0.16)
-        case .green: return Color(red: 0.75, green: 1.0, blue: 0.45)
-        }
-    }
 }
 
 enum VFDTextSize: Int {
@@ -49,6 +39,8 @@ final class VFDBuffer {
     var scroll = 0
     /// Lowest content row drawn (for scroll limits).
     private(set) var contentBottom = 0
+    /// Furthest the content can scroll (set by the root after drawing).
+    var maxScroll = 0
 
     init(cols: Int, rows: Int) {
         self.cols = max(cols, 1); self.rows = max(rows, 1)
