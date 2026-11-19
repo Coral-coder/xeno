@@ -5,6 +5,7 @@ struct VacuumView: View {
     @State private var decayStart: Date?
     @State private var decaySamples: [TimedSample] = []
     @State private var saving: JobRecord?
+    @State private var reachedTarget = false
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { ctx in
@@ -75,6 +76,10 @@ struct VacuumView: View {
             }
             .onChange(of: ctx.date) { _, now in
                 if decayStart != nil, let m = model.input(.vacuum) { decaySamples.append(TimedSample(t: now, value: m)) }
+                if let m = model.input(.vacuum) {
+                    if m <= model.settings.vacuumTarget && !reachedTarget { reachedTarget = true; Alerts.fire() }
+                    if m > model.settings.vacuumTarget * 1.5 { reachedTarget = false }
+                }
             }
         }
         .xenoScreen()

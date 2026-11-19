@@ -43,6 +43,7 @@ struct SettingsView: View {
                 }
                 Section("Probes") {
                     Toggle("Auto-assign new probes", isOn: $model.settings.autoAssign)
+                    Toggle("Keep screen on", isOn: $model.settings.keepAwake)
                     Stepper("Offline after \(Int(model.settings.staleSeconds)) s", value: $model.settings.staleSeconds, in: 5...120, step: 5)
                     Toggle("Demo probes", isOn: Binding(get: { model.settings.demoMode }, set: { model.setDemo($0) }))
                     NavigationLink { DebugCaptureView() } label: { Label("Debug capture → zip & email", systemImage: "ladybug") }

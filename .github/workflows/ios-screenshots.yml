@@ -14,18 +14,9 @@ permissions:
 
 concurrency:
   group: screenshots-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
-  core-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: swift-actions/setup-swift@v2
-        with:
-          swift-version: "6.1"
-      - run: swift test
-
   screenshots:
     runs-on: macos-26
     timeout-minutes: 60
@@ -47,6 +38,8 @@ jobs:
               grep -E ': error: ' build.log | sort -u | head -40 | while IFS= read -r l; do echo "::error::$l"; done
               tail -60 build.log; exit 1; }
           tail -5 build.log
+      - name: Core unit tests
+        run: set -o pipefail; swift test 2>&1 | tail -15
       - name: Capture screenshots
         run: |
           app=$(find build/Build/Products -name 'Xeno.app' -maxdepth 3 | head -1)

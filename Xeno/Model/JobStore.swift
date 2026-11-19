@@ -29,7 +29,7 @@ struct Equipment: Codable, Hashable {
     var factoryCharge = ""
 }
 
-struct Job: Codable, Identifiable, Hashable {
+struct Job: Identifiable, Hashable {
     var id = UUID()
     var created = Date()
     var customer = ""
@@ -40,7 +40,43 @@ struct Job: Codable, Identifiable, Hashable {
     var equipment = Equipment()
     var notes = ""
     var records: [JobRecord] = []
+    /// Photo file names in Documents/photos.
+    var photos: [String] = []
     var title: String { customer.isEmpty ? "Job \(created.formatted(date: .abbreviated, time: .shortened))" : customer }
+}
+
+/// Tolerant decoding: fields added in later builds never make old jobs unreadable.
+extension Job: Codable {
+    enum CodingKeys: String, CodingKey { case id, created, customer, address, phone, email, workOrder, equipment, notes, records, photos }
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.init()
+        id = try c.decodeIfPresent(UUID.self, forKey: .id) ?? id
+        created = try c.decodeIfPresent(Date.self, forKey: .created) ?? created
+        customer = try c.decodeIfPresent(String.self, forKey: .customer) ?? ""
+        address = try c.decodeIfPresent(String.self, forKey: .address) ?? ""
+        phone = try c.decodeIfPresent(String.self, forKey: .phone) ?? ""
+        email = try c.decodeIfPresent(String.self, forKey: .email) ?? ""
+        workOrder = try c.decodeIfPresent(String.self, forKey: .workOrder) ?? ""
+        equipment = (try? c.decodeIfPresent(Equipment.self, forKey: .equipment)) ?? Equipment()
+        notes = try c.decodeIfPresent(String.self, forKey: .notes) ?? ""
+        records = (try? c.decodeIfPresent([JobRecord].self, forKey: .records)) ?? []
+        photos = (try? c.decodeIfPresent([String].self, forKey: .photos)) ?? []
+    }
+}
+
+enum PhotoStore {
+    static var dir: URL {
+        let d = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("photos")
+        try? FileManager.default.createDirectory(at: d, withIntermediateDirectories: true)
+        return d
+    }
+    static func save(_ data: Data) -> String? {
+        let name = UUID().uuidString + ".jpg"
+        do { try data.write(to: dir.appendingPathComponent(name)); return name } catch { return nil }
+    }
+    static func url(_ name: String) -> URL { dir.appendingPathComponent(name) }
+    static func delete(_ name: String) { try? FileManager.default.removeItem(at: url(name)) }
 }
 
 @Observable

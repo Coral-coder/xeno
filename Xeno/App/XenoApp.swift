@@ -24,7 +24,8 @@ struct XenoApp: App {
                 .environment(model)
                 .preferredColorScheme(.dark)
                 .tint(Theme.alien)
-                .onAppear { model.start() }
+                .onAppear { model.start(); UIApplication.shared.isIdleTimerDisabled = model.settings.keepAwake }
+                .onChange(of: model.settings.keepAwake) { _, on in UIApplication.shared.isIdleTimerDisabled = on }
         }
     }
 }

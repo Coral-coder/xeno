@@ -20,6 +20,7 @@ struct XenoSettings: Codable, Equatable {
     var autoAssign: Bool = true
     var demoMode: Bool = false
     var staleSeconds: Double = 20
+    var keepAwake: Bool = true
 
     var atmPsia: Double { Units.atmosphericPsia(altitudeFt: altitudeFt) }
 }

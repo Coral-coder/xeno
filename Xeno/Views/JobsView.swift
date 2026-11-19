@@ -1,4 +1,5 @@
 import Charts
+import PhotosUI
 import SwiftUI
 
 struct JobsView: View {
@@ -62,6 +63,7 @@ struct JobDetailView: View {
     @State private var job = Job()
     @State private var loaded = false
     @State private var reportURL: URL?
+    @State private var pickedPhotos: [PhotosPickerItem] = []
 
     var body: some View {
         Form {
@@ -95,6 +97,36 @@ struct JobDetailView: View {
             }
             Section("Notes") {
                 TextEditor(text: $job.notes).frame(minHeight: 90)
+            }
+            Section("Photos") {
+                if !job.photos.isEmpty {
+                    ScrollView(.horizontal) {
+                        HStack {
+                            ForEach(job.photos, id: \.self) { name in
+                                if let img = UIImage(contentsOfFile: PhotoStore.url(name).path) {
+                                    Image(uiImage: img).resizable().scaledToFill().frame(width: 96, height: 96).clipShape(RoundedRectangle(cornerRadius: 10))
+                                        .contextMenu {
+                                            Button("Delete photo", role: .destructive) { job.photos.removeAll { $0 == name }; PhotoStore.delete(name) }
+                                        }
+                                }
+                            }
+                        }
+                    }
+                }
+                PhotosPicker(selection: $pickedPhotos, maxSelectionCount: 10, matching: .images) {
+                    Label("Add nameplate / site photos", systemImage: "camera")
+                }
+                .onChange(of: pickedPhotos) { _, items in
+                    Task {
+                        for item in items {
+                            if let data = try? await item.loadTransferable(type: Data.self), let img = UIImage(data: data),
+                               let jpg = img.jpegData(compressionQuality: 0.7), let name = PhotoStore.save(jpg) {
+                                job.photos.append(name)
+                            }
+                        }
+                        pickedPhotos = []
+                    }
+                }
             }
             Section("Measurements") {
                 if job.records.isEmpty { Text("Use \"Save to job\" on the Charge screen and in Tools.").font(.caption).foregroundStyle(Theme.textDim) }
@@ -204,6 +236,21 @@ enum ReportPDF {
                         y += 104
                     }
                     y += 8
+                }
+                if !job.photos.isEmpty {
+                    rule()
+                    text("Photos", size: 13, weight: .semibold, color: green)
+                    var x = margin
+                    for name in job.photos {
+                        guard let img = UIImage(contentsOfFile: PhotoStore.url(name).path) else { continue }
+                        let h: CGFloat = 160
+                        let w = min(h * img.size.width / max(img.size.height, 1), page.width - 2 * margin)
+                        if x + w > page.width - margin { x = margin; y += h + 8 }
+                        ensure(h + 8)
+                        img.draw(in: CGRect(x: x, y: y, width: w, height: h))
+                        x += w + 8
+                    }
+                    y += 168
                 }
                 if !job.notes.isEmpty {
                     rule()

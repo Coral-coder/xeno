@@ -12,12 +12,7 @@ final class AppModel {
     var selectedTab: AppTab = .probes
 
     init() {
-        if let data = UserDefaults.standard.data(forKey: "xeno.settings"),
-           let s = try? JSONDecoder().decode(XenoSettings.self, from: data) {
-            settings = s
-        } else {
-            settings = XenoSettings()
-        }
+        settings = Self.loadSettings()
         // Launch arguments (used by the screenshot workflow): -XenoDemo YES -XenoTab charge
         let defaults = UserDefaults.standard
         if defaults.bool(forKey: "XenoDemo") { settings.demoMode = true }
@@ -88,6 +83,19 @@ final class AppModel {
                       verdict: ChargeDiagnosis.inRange.rawValue, verdictGood: true),
         ]
         jobs.create(job)
+    }
+
+    /// Saved settings merged over the defaults, so settings added in later builds don't
+    /// reset everything a tech already configured.
+    private static func loadSettings() -> XenoSettings {
+        guard let data = UserDefaults.standard.data(forKey: "xeno.settings"),
+              let saved = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let defaultsData = try? JSONEncoder().encode(XenoSettings()),
+              var merged = try? JSONSerialization.jsonObject(with: defaultsData) as? [String: Any] else { return XenoSettings() }
+        merged.merge(saved) { _, new in new }
+        guard let mergedData = try? JSONSerialization.data(withJSONObject: merged),
+              let s = try? JSONDecoder().decode(XenoSettings.self, from: mergedData) else { return XenoSettings() }
+        return s
     }
 
     private func persistSettings() {

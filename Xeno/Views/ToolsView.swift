@@ -18,6 +18,11 @@ struct ToolsView: View {
         Tool(id: "pt", title: "P/T chart", subtitle: "\(Refrigerants.all.count) refrigerants", symbol: "tablecells", color: Theme.alien),
         Tool(id: "psychro", title: "Psychrometrics", subtitle: "WB · DP · grains · enthalpy", symbol: "humidity", color: Theme.nebula),
         Tool(id: "furnace", title: "Furnace airflow", subtitle: "Temperature rise method", symbol: "flame", color: Theme.danger),
+        Tool(id: "weighin", title: "Weigh-in charge", subtitle: "Scale · line-set adjust", symbol: "scalemass", color: Theme.beam),
+        Tool(id: "electrical", title: "Electrical", subtitle: "Capacitors · motor amps", symbol: "bolt", color: Theme.warn),
+        Tool(id: "convert", title: "Converter", subtitle: "Pressure · vacuum · capacity", symbol: "arrow.left.arrow.right", color: Theme.alien),
+        Tool(id: "duct", title: "Duct airflow", subtitle: "Velocity × area · equiv. round", symbol: "square.split.diagonal", color: Theme.nebula),
+        Tool(id: "leak", title: "Leak rate", subtitle: "EPA 608 annualized", symbol: "drop.triangle", color: Theme.danger),
         Tool(id: "logger", title: "Data logger", subtitle: "Graph every probe", symbol: "chart.xyaxis.line", color: Theme.warn),
         Tool(id: "explorer", title: "BLE explorer", subtitle: "Any probe, any brand", symbol: "antenna.radiowaves.left.and.right", color: Theme.textDim),
     ]
@@ -65,6 +70,11 @@ struct ToolsView: View {
         case "furnace": FurnaceView()
         case "logger": LoggerView()
         case "debug": DebugCaptureView()
+        case "weighin": WeighInView()
+        case "electrical": ElectricalView()
+        case "convert": ConverterView()
+        case "duct": DuctAirflowView()
+        case "leak": LeakRateView()
         case "lab": ProbeLabView()
         default: ExplorerView()
         }
