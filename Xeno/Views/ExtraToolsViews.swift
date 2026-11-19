@@ -22,18 +22,18 @@ struct WeighInView: View {
                     XenoCard(glow: Theme.beam) {
                         VStack(spacing: 10) {
                             ZStack {
-                                Circle().stroke(Color.white.opacity(0.08), lineWidth: 16)
+                                Circle().stroke(Theme.text.opacity(0.08), lineWidth: 16)
                                 Circle().trim(from: 0, to: progress).stroke(progress >= 1 ? Theme.alien : Theme.beam, style: StrokeStyle(lineWidth: 16, lineCap: .round))
                                     .rotationEffect(.degrees(-90)).shadow(color: Theme.beam.opacity(0.6), radius: 8)
                                 VStack(spacing: 2) {
                                     Text(charged.map { lbOz($0) } ?? "––").font(Theme.reading(36))
-                                    Text("of \(lbOz(target))").font(.caption).foregroundStyle(Theme.textDim)
+                                    Text("of \(lbOz(target))").font(Theme.font(.caption)).foregroundStyle(Theme.textDim)
                                 }
                             }
                             .frame(width: 210, height: 210)
                             .padding(.vertical, 6)
                             if let charged, charged >= target, target > 0 {
-                                Text("TARGET REACHED: close the valve").font(.system(.headline, design: .rounded)).foregroundStyle(Theme.alien)
+                                Text("TARGET REACHED: close the valve").font(Theme.font(.headline)).foregroundStyle(Theme.alien)
                             }
                         }
                         .frame(maxWidth: .infinity)
@@ -45,7 +45,7 @@ struct WeighInView: View {
                                 KeyValueRow(key: "Scale \(scale.displayName)", value: weight.map { $0.formatted(decimals: 2) } ?? "––", unit: "lb")
                             } else {
                                 LabeledField(label: "Tank weight (manual)", text: $manualWeight, unit: "lb")
-                                Text("No scale connected; type the tank weight from any scale.").font(.caption).foregroundStyle(Theme.textDim)
+                                Text("No scale connected; type the tank weight from any scale.").font(Theme.font(.caption)).foregroundStyle(Theme.textDim)
                             }
                             Button(tare == nil ? "Zero (start charging)" : "Re-zero") { tare = weight; alerted = false }
                                 .buttonStyle(GlowButtonStyle(color: Theme.beam)).disabled(weight == nil)
@@ -90,9 +90,9 @@ struct LineSetCard: View {
                 LabeledField(label: "Actual length", text: $actualText, unit: "ft")
                 LabeledField(label: "Included in factory charge", text: $includedText, unit: "ft")
                 KeyValueRow(key: "Additional charge", value: extra.formatted(decimals: 1), unit: "oz")
-                Button("Use as charge target") { targetText = (extra / 16).formatted(decimals: 2) }.font(.caption.weight(.semibold))
+                Button("Use as charge target") { targetText = (extra / 16).formatted(decimals: 2) }.font(Theme.font(.caption, weight: .semibold))
                 Text("Typical R-410A rates (\(Self.ozPerFt[size]?.formatted(decimals: 1) ?? "") oz/ft). Always confirm with the manufacturer's installation instructions.")
-                    .font(.caption2).foregroundStyle(Theme.textDim)
+                    .font(Theme.font(.caption2)).foregroundStyle(Theme.textDim)
             }
         }
     }
@@ -119,7 +119,7 @@ struct ElectricalView: View {
                         LabeledField(label: "Rated", text: $ratedUF, unit: "µF")
                         LabeledField(label: "Measured", text: $measuredUF, unit: "µF")
                         if let c = meter?.first(.capacitance) {
-                            Button("Use meter: \(c.value.formatted(decimals: 1)) µF") { measuredUF = c.value.formatted(decimals: 1) }.font(.caption.weight(.semibold))
+                            Button("Use meter: \(c.value.formatted(decimals: 1)) µF") { measuredUF = c.value.formatted(decimals: 1) }.font(Theme.font(.caption, weight: .semibold))
                         }
                         Picker("Tolerance", selection: $tolerance) { Text("±5%").tag(5.0); Text("±6%").tag(6.0); Text("±10%").tag(10.0) }.pickerStyle(.segmented)
                         if let r = Double(ratedUF), let m = Double(measuredUF), r > 0 {
@@ -127,7 +127,7 @@ struct ElectricalView: View {
                             let ok = abs(dev) <= tolerance
                             KeyValueRow(key: "Deviation", value: dev.formatted(decimals: 1), unit: "%")
                             KeyValueRow(key: "Acceptable range", value: "\((r * (1 - tolerance / 100)).formatted(decimals: 1))–\((r * (1 + tolerance / 100)).formatted(decimals: 1))", unit: "µF")
-                            Text(ok ? "GOOD" : "REPLACE CAPACITOR").font(.system(.headline, design: .rounded)).foregroundStyle(ok ? Theme.alien : Theme.danger)
+                            Text(ok ? "GOOD" : "REPLACE CAPACITOR").font(Theme.font(.headline)).foregroundStyle(ok ? Theme.alien : Theme.danger)
                         }
                     }
                 }
@@ -139,7 +139,7 @@ struct ElectricalView: View {
                         if let a = Double(startAmps), let v = Double(capVolts), v > 0 {
                             KeyValueRow(key: "Calculated capacitance", value: (2652 * a / v).formatted(decimals: 1), unit: "µF")
                         }
-                        Text("µF = 2652 × amps ÷ volts (60 Hz). Measures the capacitor in-circuit while running.").font(.caption2).foregroundStyle(Theme.textDim)
+                        Text("µF = 2652 × amps ÷ volts (60 Hz). Measures the capacitor in-circuit while running.").font(Theme.font(.caption2)).foregroundStyle(Theme.textDim)
                     }
                 }
                 XenoCard(glow: Theme.nebula) {
@@ -148,13 +148,13 @@ struct ElectricalView: View {
                         LabeledField(label: "Nameplate RLA / FLA", text: $rla, unit: "A")
                         LabeledField(label: "Measured", text: $measuredAmps, unit: "A")
                         if let a = meter?.first(.currentAC) {
-                            Button("Use clamp: \(a.value.formatted(decimals: 2)) A") { measuredAmps = a.value.formatted(decimals: 2) }.font(.caption.weight(.semibold))
+                            Button("Use clamp: \(a.value.formatted(decimals: 2)) A") { measuredAmps = a.value.formatted(decimals: 2) }.font(Theme.font(.caption, weight: .semibold))
                         }
                         if let r = Double(rla), let m = Double(measuredAmps), r > 0 {
                             let pct = m / r * 100
                             KeyValueRow(key: "Load", value: pct.formatted(decimals: 0), unit: "% of rated")
                             Text(pct > 100 ? "Over rated amps: check voltage, capacitor, head pressure, bearings" : pct < 50 ? "Low load: check charge, airflow, valves" : "Normal range")
-                                .font(.subheadline).foregroundStyle(pct > 100 ? Theme.danger : pct < 50 ? Theme.warn : Theme.alien)
+                                .font(Theme.font(.subheadline)).foregroundStyle(pct > 100 ? Theme.danger : pct < 50 ? Theme.warn : Theme.alien)
                         }
                     }
                 }
@@ -287,13 +287,13 @@ struct LeakRateView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         ReadingView(caption: "Annualized leak rate", value: rate.map { $0.formatted(decimals: 1) } ?? "––", unit: "%",
                                     color: (rate ?? 0) > limits[type] ? Theme.danger : Theme.alien, size: 44)
-                        Text("Threshold for this appliance type: \(Int(limits[type]))%/yr").font(.caption).foregroundStyle(Theme.textDim)
+                        Text("Threshold for this appliance type: \(Int(limits[type]))%/yr").font(Theme.font(.caption)).foregroundStyle(Theme.textDim)
                         if let rate, rate > limits[type] {
                             Text("Over the threshold: repair within 30 days and do a verification test. Keep records.")
-                                .font(.subheadline).foregroundStyle(Theme.danger)
+                                .font(Theme.font(.subheadline)).foregroundStyle(Theme.danger)
                         }
                         Text("Annualizing method: (lb added ÷ full charge) × (365 ÷ days since last addition) × 100. Applies to appliances with 15 lb or more of refrigerant; check current EPA 608 rules for your refrigerant.")
-                            .font(.caption2).foregroundStyle(Theme.textDim)
+                            .font(Theme.font(.caption2)).foregroundStyle(Theme.textDim)
                     }
                 }
             }
@@ -338,7 +338,7 @@ struct DuctAirflowView: View {
                             KeyValueRow(key: "Equivalent round", value: (1.30 * pow(w * h, 0.625) / pow(w + h, 0.25)).formatted(decimals: 1), unit: "in")
                         }
                         Text("Use the average of a duct traverse (anemometer readings across the duct) for velocity. Typical residential: supply trunks 700–900 FPM, branches 500–600, returns ≤ 700.")
-                            .font(.caption2).foregroundStyle(Theme.textDim)
+                            .font(Theme.font(.caption2)).foregroundStyle(Theme.textDim)
                     }
                 }
             }

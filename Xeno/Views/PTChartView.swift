@@ -15,13 +15,13 @@ struct PTChartView: View {
             VStack(spacing: 14) {
                 Button { picking = true } label: {
                     HStack {
-                        Text(r.name).font(.system(.title2, design: .rounded).weight(.bold))
+                        Text(r.name).font(Theme.font(.title2, weight: .bold))
                         StatusPill(text: r.safetyClass, color: Theme.beam)
                         if r.hasGlide { StatusPill(text: "GLIDE", color: Theme.nebula) }
                         Spacer()
                         Image(systemName: "chevron.down")
                     }
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Theme.text)
                 }
                 XenoCard(glow: Theme.beam) {
                     VStack(spacing: 12) {
@@ -40,7 +40,7 @@ struct PTChartView: View {
                         HStack {
                             Text("Pressure → temp").foregroundStyle(Theme.textDim)
                             TextField(fmt.pUnit, text: $pressureText).keyboardType(.decimalPad).multilineTextAlignment(.trailing)
-                            Text(fmt.pUnit).font(.caption).foregroundStyle(Theme.textDim)
+                            Text(fmt.pUnit).font(Theme.font(.caption)).foregroundStyle(Theme.textDim)
                         }
                         if let p = Double(pressureText).map({ s.pressureUnit.toPsig($0) }) {
                             KeyValueRow(key: "Dew point", value: fmt.temp(r.satTempF(psig: p, side: .dew, atmPsia: atm)), unit: fmt.tUnit)
@@ -64,7 +64,7 @@ struct PTChartView: View {
                                 Text(fmt.pressure(r.satPsig(tempF: Double(t), side: .dew, atmPsia: atm)))
                                 if r.hasGlide { Text(fmt.pressure(r.satPsig(tempF: Double(t), side: .bubble, atmPsia: atm))).frame(width: 80, alignment: .trailing).foregroundStyle(Theme.warn) }
                             }
-                            .font(.system(.subheadline, design: .rounded).monospacedDigit())
+                            .font(Theme.font(.subheadline).monospacedDigit())
                             .padding(.vertical, 5)
                             .background(t == Int(sliderF.rounded()) ? Theme.alien.opacity(0.15) : .clear)
                             Divider().opacity(0.15)
@@ -72,7 +72,7 @@ struct PTChartView: View {
                     }
                 }
                 Text("Saturation data computed with CoolProp (NIST-grade equations of state). Oil: \(r.oil). \(r.use).")
-                    .font(.caption2).foregroundStyle(Theme.textDim)
+                    .font(Theme.font(.caption2)).foregroundStyle(Theme.textDim)
             }
             .padding(16)
         }
@@ -100,10 +100,10 @@ struct LoggerView: View {
                         XenoCard(glow: Theme.beam) {
                             VStack(alignment: .leading, spacing: 6) {
                                 HStack {
-                                    Text("\(p.displayName) · \(r.label)").font(.system(.subheadline, design: .rounded).weight(.semibold))
+                                    Text("\(p.displayName) · \(r.label)").font(Theme.font(.subheadline, weight: .semibold))
                                     Spacer()
                                     let (v, u) = model.fmt.reading(r)
-                                    Text("\(v) \(u)").font(.system(.subheadline, design: .rounded).monospacedDigit()).foregroundStyle(Theme.alien)
+                                    Text("\(v) \(u)").font(Theme.font(.subheadline).monospacedDigit()).foregroundStyle(Theme.alien)
                                 }
                                 SeriesChart(samples: (p.history[r.id] ?? []).filter { $0.t > Date().addingTimeInterval(-window) }, kind: r.kind, color: Theme.beam)
                                     .frame(height: 110)

@@ -17,6 +17,8 @@ final class AppModel {
         let defaults = UserDefaults.standard
         if defaults.bool(forKey: "XenoDemo") { settings.demoMode = true }
         if let t = defaults.string(forKey: "XenoTab"), let tab = AppTab(rawValue: t) { selectedTab = tab }
+        if let t = defaults.string(forKey: "XenoTheme"), let k = ThemeKind(rawValue: t) { settings.theme = k }
+        Theme.kind = settings.theme
         probes.autoAssign = settings.autoAssign
         bluetooth = BluetoothService(model: self)
         demo = DemoSource(model: self)
@@ -99,6 +101,7 @@ final class AppModel {
     }
 
     private func persistSettings() {
+        Theme.kind = settings.theme
         probes.autoAssign = settings.autoAssign
         if let data = try? JSONEncoder().encode(settings) { UserDefaults.standard.set(data, forKey: "xeno.settings") }
     }

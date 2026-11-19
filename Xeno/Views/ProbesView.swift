@@ -74,7 +74,7 @@ struct ScanBanner: View {
         }()
         HStack(spacing: 10) {
             PulseDot(color: color, active: bt == .scanning)
-            Text(text).font(.system(.subheadline, design: .rounded).weight(.medium))
+            Text(text).font(Theme.font(.subheadline, weight: .medium))
             Spacer()
             if model.settings.demoMode { StatusPill(text: "DEMO", color: Theme.nebula) }
             Text("\(model.probes.probes.count) found").font(Theme.label).foregroundStyle(Theme.textDim)
@@ -104,9 +104,9 @@ struct EmptyProbes: View {
         VStack(spacing: 16) {
             AlienGlyph(color: Theme.alien.opacity(0.8)).frame(width: 80)
                 .shadow(color: Theme.alien.opacity(0.6), radius: 20)
-            Text("Searching the airwaves…").font(.system(.title3, design: .rounded).weight(.semibold))
+            Text("Searching the airwaves…").font(Theme.font(.title3, weight: .semibold))
             Text("Turn on your Fieldpiece Job Link probes. They appear here automatically. No pairing needed.")
-                .font(.system(.subheadline, design: .rounded)).foregroundStyle(Theme.textDim).multilineTextAlignment(.center)
+                .font(Theme.font(.subheadline)).foregroundStyle(Theme.textDim).multilineTextAlignment(.center)
             Button("Try demo probes") { model.setDemo(true) }.buttonStyle(GlowButtonStyle(color: Theme.nebula)).frame(maxWidth: 240)
         }
         .padding(.vertical, 60)
@@ -126,7 +126,7 @@ struct ProbeCard: View {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     Image(systemName: probe.category.symbol).foregroundStyle(color)
-                    Text(probe.displayName).font(.system(.subheadline, design: .rounded).weight(.semibold)).lineLimit(1)
+                    Text(probe.displayName).font(Theme.font(.subheadline, weight: .semibold)).lineLimit(1)
                     Spacer(minLength: 0)
                 }
                 HStack(spacing: 4) {
@@ -136,21 +136,21 @@ struct ProbeCard: View {
                 ForEach(probe.readings.filter { $0.kind != .wetBulb && $0.kind != .dewPoint }.prefix(4)) { r in
                     let (v, u) = fmt.reading(r)
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        if probe.readings.count > 1 { Text(r.label).font(.caption2).foregroundStyle(Theme.textDim).frame(width: 52, alignment: .leading).lineLimit(1) }
-                        Text(v).font(Theme.reading(probe.readings.count > 1 ? 20 : 30)).foregroundStyle(stale ? Theme.textDim : .white)
+                        if probe.readings.count > 1 { Text(r.label).font(Theme.font(.caption2)).foregroundStyle(Theme.textDim).frame(width: 52, alignment: .leading).lineLimit(1) }
+                        Text(v).font(Theme.reading(probe.readings.count > 1 ? 20 : 30)).foregroundStyle(stale ? Theme.textDim : Theme.text)
                             .lineLimit(1).minimumScaleFactor(0.6)
-                        Text(u).font(.caption2).foregroundStyle(Theme.textDim)
+                        Text(u).font(Theme.font(.caption2)).foregroundStyle(Theme.textDim)
                     }
                 }
                 if probe.readings.isEmpty {
                     Text(probe.category == .unknown ? "Unknown model: open Probe Lab" : "No reading")
-                        .font(.caption).foregroundStyle(Theme.warn)
+                        .font(Theme.font(.caption)).foregroundStyle(Theme.warn)
                 }
                 HStack(spacing: 8) {
                     SignalBars(rssi: probe.rssi, stale: stale)
                     if let b = probe.battery { BatteryIcon(level: b) }
                     Spacer()
-                    if stale { Text("offline").font(.caption2).foregroundStyle(Theme.danger) }
+                    if stale { Text("offline").font(Theme.font(.caption2)).foregroundStyle(Theme.danger) }
                 }
             }
         }
@@ -174,7 +174,7 @@ struct SignalBars: View {
         let level = rssi > -60 ? 4 : rssi > -70 ? 3 : rssi > -80 ? 2 : 1
         HStack(alignment: .bottom, spacing: 2) {
             ForEach(1...4, id: \.self) { i in
-                RoundedRectangle(cornerRadius: 1).fill(i <= level && !stale ? Theme.alien : Color.white.opacity(0.2)).frame(width: 3, height: CGFloat(3 + i * 3))
+                RoundedRectangle(cornerRadius: 1).fill(i <= level && !stale ? Theme.alien : Theme.text.opacity(0.2)).frame(width: 3, height: CGFloat(3 + i * 3))
             }
         }
     }
@@ -186,8 +186,8 @@ struct BatteryIcon: View {
         let sym = level > 75 ? "battery.100" : level > 50 ? "battery.75" : level > 25 ? "battery.50" : level > 10 ? "battery.25" : "battery.0"
         HStack(spacing: 2) {
             Image(systemName: sym).foregroundStyle(level > 20 ? Theme.textDim : Theme.danger)
-            Text("\(level)%").font(.caption2).foregroundStyle(Theme.textDim)
+            Text("\(level)%").font(Theme.font(.caption2)).foregroundStyle(Theme.textDim)
         }
-        .font(.caption)
+        .font(Theme.font(.caption))
     }
 }

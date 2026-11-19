@@ -16,16 +16,16 @@ struct ProbeDetailView: View {
                 XenoCard {
                     VStack(alignment: .leading, spacing: 10) {
                         TextField("Nickname (e.g. Suction)", text: $name)
-                            .font(.system(.title3, design: .rounded).weight(.semibold))
+                            .font(Theme.font(.title3, weight: .semibold))
                             .onSubmit { model.probes.rename(probe, to: name) }
                         Text("\(probe.vendor) \(probe.model) · ID \(probe.serial)\(probe.firmware.map { " · fw \($0)" } ?? "")")
-                            .font(.caption).foregroundStyle(Theme.textDim)
+                            .font(Theme.font(.caption)).foregroundStyle(Theme.textDim)
                         HStack {
                             SignalBars(rssi: probe.rssi, stale: false)
-                            Text("\(probe.rssi) dBm").font(.caption).foregroundStyle(Theme.textDim)
+                            Text("\(probe.rssi) dBm").font(Theme.font(.caption)).foregroundStyle(Theme.textDim)
                             if let b = probe.battery { BatteryIcon(level: b) }
                             Spacer()
-                            Text("\(probe.packets) packets").font(.caption2).foregroundStyle(Theme.textDim)
+                            Text("\(probe.packets) packets").font(Theme.font(.caption2)).foregroundStyle(Theme.textDim)
                         }
                     }
                 }
@@ -68,7 +68,7 @@ struct ProbeDetailView: View {
                                     Text(role.title)
                                     Spacer()
                                     if let ref = model.probes.assignments[role], assigned {
-                                        Text(ref.label).font(.caption).foregroundStyle(Theme.textDim)
+                                        Text(ref.label).font(Theme.font(.caption)).foregroundStyle(Theme.textDim)
                                     }
                                     Image(systemName: assigned ? "checkmark.circle.fill" : "circle").foregroundStyle(assigned ? Theme.alien : Theme.textDim)
                                 }
@@ -87,10 +87,10 @@ struct ProbeDetailView: View {
                         Text(probe.raw.map { String(format: "%02X", $0) }.joined(separator: " "))
                             .font(.system(.caption, design: .monospaced)).textSelection(.enabled)
                         if let layout = model.lab.layout(for: probe.typeCode) {
-                            Text(layout.provenance).font(.caption2).foregroundStyle(Theme.textDim)
+                            Text(layout.provenance).font(Theme.font(.caption2)).foregroundStyle(Theme.textDim)
                         }
                         NavigationLink("Open in Probe Lab") { LayoutEditorView(typeCode: probe.typeCode, sample: probe.raw) }
-                            .font(.caption.weight(.semibold))
+                            .font(Theme.font(.caption, weight: .semibold))
                     }
                 }
 
@@ -140,8 +140,8 @@ struct SeriesChart: View {
             }
         }
         .chartYScale(domain: .automatic(includesZero: false), type: logScale ? ScaleType.log : ScaleType.linear)
-        .chartXAxis { AxisMarks(values: .automatic(desiredCount: 4)) { _ in AxisGridLine().foregroundStyle(.white.opacity(0.08)); AxisValueLabel(format: .dateTime.hour().minute()) } }
-        .chartYAxis { AxisMarks { _ in AxisGridLine().foregroundStyle(.white.opacity(0.08)); AxisValueLabel() } }
+        .chartXAxis { AxisMarks(values: .automatic(desiredCount: 4)) { _ in AxisGridLine().foregroundStyle(Theme.text.opacity(0.08)); AxisValueLabel(format: .dateTime.hour().minute()) } }
+        .chartYAxis { AxisMarks { _ in AxisGridLine().foregroundStyle(Theme.text.opacity(0.08)); AxisValueLabel() } }
     }
 
     func convert(_ v: Double, _ s: XenoSettings) -> Double {

@@ -18,8 +18,8 @@ struct ChargeView: View {
                             Button { pickingRefrigerant = true } label: {
                                 HStack(spacing: 6) {
                                     Image(systemName: "drop.fill")
-                                    Text(model.refrigerant.name).font(.system(.headline, design: .rounded))
-                                    Image(systemName: "chevron.down").font(.caption)
+                                    Text(model.refrigerant.name).font(Theme.font(.headline))
+                                    Image(systemName: "chevron.down").font(Theme.font(.caption))
                                 }
                                 .padding(.horizontal, 14).padding(.vertical, 9)
                                 .background(Capsule().fill(Theme.beam.opacity(0.15)))
@@ -66,7 +66,7 @@ struct ChargeView: View {
                                             tolerance: s.temperatureUnit.deltaFromF(s.chargeTolerance), unit: fmt.dUnit) { $0.formatted(decimals: 1) }
                                 if s.metering == .txv {
                                     Stepper(value: $model.settings.targetSubcool, in: 2...25, step: 0.5) {
-                                        Text("Target subcool (nameplate): \(s.targetSubcool.formatted(decimals: 1))°F").font(.caption).foregroundStyle(Theme.textDim)
+                                        Text("Target subcool (nameplate): \(s.targetSubcool.formatted(decimals: 1))°F").font(Theme.font(.caption)).foregroundStyle(Theme.textDim)
                                     }
                                 }
                             }
@@ -172,8 +172,8 @@ struct ReadingViewSmall: View {
         VStack(alignment: .leading, spacing: 2) {
             Text(caption).font(Theme.label).foregroundStyle(Theme.textDim)
             HStack(alignment: .firstTextBaseline, spacing: 3) {
-                Text(value).font(Theme.reading(24)).foregroundStyle(.white.opacity(0.85))
-                Text(unit).font(.footnote).foregroundStyle(Theme.textDim)
+                Text(value).font(Theme.reading(24)).foregroundStyle(Theme.text.opacity(0.85))
+                Text(unit).font(Theme.font(.footnote)).foregroundStyle(Theme.textDim)
             }
         }
     }
@@ -186,10 +186,10 @@ struct DiagnosisCard: View {
         XenoCard(glow: color) {
             HStack(spacing: 12) {
                 Image(systemName: diagnosis == .needsData ? "antenna.radiowaves.left.and.right" : diagnosis.isGood ? "checkmark.seal.fill" : "exclamationmark.triangle.fill")
-                    .font(.title2).foregroundStyle(color)
+                    .font(Theme.font(.title2)).foregroundStyle(color)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(diagnosis.rawValue).font(.system(.headline, design: .rounded)).foregroundStyle(color)
-                    Text(diagnosis.detail).font(.caption).foregroundStyle(Theme.textDim)
+                    Text(diagnosis.rawValue).font(Theme.font(.headline)).foregroundStyle(color)
+                    Text(diagnosis.detail).font(Theme.font(.caption)).foregroundStyle(Theme.textDim)
                 }
             }
         }
@@ -211,11 +211,11 @@ struct RefrigerantPicker: View {
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
                                 HStack {
-                                    Text(r.name).font(.system(.headline, design: .rounded)).foregroundStyle(.white)
+                                    Text(r.name).font(Theme.font(.headline)).foregroundStyle(Theme.text)
                                     StatusPill(text: r.safetyClass, color: r.safetyClass.hasPrefix("A1") ? Theme.alien : r.safetyClass.contains("2L") ? Theme.warn : Theme.danger)
                                     if r.hasGlide { StatusPill(text: "GLIDE", color: Theme.nebula) }
                                 }
-                                Text(r.use).font(.caption).foregroundStyle(Theme.textDim)
+                                Text(r.use).font(Theme.font(.caption)).foregroundStyle(Theme.textDim)
                             }
                             Spacer()
                             if r.name == selection { Image(systemName: "checkmark").foregroundStyle(Theme.alien) }

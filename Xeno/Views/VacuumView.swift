@@ -20,7 +20,7 @@ struct VacuumView: View {
                             HStack(alignment: .firstTextBaseline, spacing: 6) {
                                 Text(fmt.vacuum(microns)).font(Theme.reading(72)).foregroundStyle(color(microns))
                                     .shadow(color: color(microns).opacity(0.7), radius: 16)
-                                Text(s.vacuumUnit.rawValue).font(.system(.title3, design: .rounded)).foregroundStyle(Theme.textDim)
+                                Text(s.vacuumUnit.rawValue).font(Theme.font(.title3)).foregroundStyle(Theme.textDim)
                             }
                             MicronScale(microns: microns, target: s.vacuumTarget)
                                 .frame(height: 26)
@@ -29,9 +29,9 @@ struct VacuumView: View {
                                 Spacer()
                                 Text("Rate \(max(0, VacuumAnalysis.rate(Array(history.suffix(60))).rounded()).formatted(decimals: 0)) µ/min")
                             }
-                            .font(.caption).foregroundStyle(Theme.textDim)
+                            .font(Theme.font(.caption)).foregroundStyle(Theme.textDim)
                             if model.value(.vacuum) == nil {
-                                Text("Assign a vacuum gauge in Probes, or type a reading.").font(.caption).foregroundStyle(Theme.warn)
+                                Text("Assign a vacuum gauge in Probes, or type a reading.").font(Theme.font(.caption)).foregroundStyle(Theme.warn)
                                 RoleInput(role: .vacuum, caption: "Manual reading")
                             }
                         }
@@ -55,7 +55,7 @@ struct VacuumView: View {
                                     Spacer()
                                     ReadingView(caption: "Rise", value: ((decaySamples.last?.value ?? 0) - (decaySamples.first?.value ?? 0)).formatted(decimals: 0), unit: "µ")
                                 }
-                                Text(verdict.rawValue).font(.system(.headline, design: .rounded))
+                                Text(verdict.rawValue).font(Theme.font(.headline))
                                     .foregroundStyle(verdict == .pass ? Theme.alien : verdict == .running ? Theme.beam : Theme.danger)
                                 SeriesChart(samples: decaySamples, kind: .vacuum, color: Theme.beam, threshold: s.vacuumDecayLimit).frame(height: 140)
                                 HStack {
@@ -64,7 +64,7 @@ struct VacuumView: View {
                                 }
                             } else {
                                 Text("Isolate the pump with the core tool valves, then start. Passes if the system holds under \(fmt.vacuum(s.vacuumDecayLimit)) \(s.vacuumUnit.rawValue) for \(Int(s.vacuumHoldMinutes)) minutes.")
-                                    .font(.caption).foregroundStyle(Theme.textDim)
+                                    .font(Theme.font(.caption)).foregroundStyle(Theme.textDim)
                                 Button { decayStart = .now; decaySamples = [] } label: { Label("Start decay test", systemImage: "play.fill") }
                                     .buttonStyle(GlowButtonStyle(color: Theme.beam))
                                     .disabled(microns == nil)
@@ -113,12 +113,12 @@ struct MicronScale: View {
             let x: (Double) -> CGFloat = { m in CGFloat((log10(max(50, min(25000, m))) - log10(50)) / (log10(25000) - log10(50))) * w }
             ZStack(alignment: .leading) {
                 Capsule().fill(LinearGradient(colors: [Theme.alien, Theme.warn, Theme.danger], startPoint: .leading, endPoint: .trailing)).opacity(0.35).frame(height: 8)
-                Rectangle().fill(.white.opacity(0.7)).frame(width: 1.5, height: 16).offset(x: x(target))
+                Rectangle().fill(Theme.text.opacity(0.7)).frame(width: 1.5, height: 16).offset(x: x(target))
                 if let microns {
-                    Circle().fill(.white).frame(width: 14, height: 14).shadow(color: Theme.alien, radius: 6).offset(x: x(microns) - 7)
+                    Circle().fill(Theme.text).frame(width: 14, height: 14).shadow(color: Theme.alien, radius: 6).offset(x: x(microns) - 7)
                 }
                 ForEach([100.0, 500, 1000, 5000, 20000], id: \.self) { m in
-                    Text(m >= 1000 ? "\(Int(m / 1000))k" : "\(Int(m))").font(.system(size: 9, design: .rounded)).foregroundStyle(Theme.textDim)
+                    Text(m >= 1000 ? "\(Int(m / 1000))k" : "\(Int(m))").font(Theme.font(size: 9)).foregroundStyle(Theme.textDim)
                         .offset(x: x(m) - 8, y: 14)
                 }
             }

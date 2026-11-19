@@ -7,7 +7,7 @@ struct RoleInput: View {
     var caption: String? = nil
     var humidity = false
     var size: CGFloat = 24
-    var color: Color = .white
+    var color: Color = Theme.text
     @State private var text = ""
     @FocusState private var focused: Bool
 
@@ -17,7 +17,7 @@ struct RoleInput: View {
         VStack(alignment: .leading, spacing: 2) {
             HStack(spacing: 4) {
                 Text(caption ?? (humidity ? "\(role.title) RH" : role.title)).font(Theme.label).foregroundStyle(Theme.textDim)
-                if live != nil { Image(systemName: "dot.radiowaves.right").font(.caption2).foregroundStyle(Theme.alien) }
+                if live != nil { Image(systemName: "dot.radiowaves.right").font(Theme.font(.caption2)).foregroundStyle(Theme.alien) }
             }
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 if let live {
@@ -31,7 +31,7 @@ struct RoleInput: View {
                         .onChange(of: text) { _, v in store(v, s) }
                         .frame(minWidth: 50)
                 }
-                Text(unit(s)).font(.system(.footnote, design: .rounded)).foregroundStyle(Theme.textDim)
+                Text(unit(s)).font(Theme.font(.footnote)).foregroundStyle(Theme.textDim)
             }
         }
         .onAppear { text = initialText(s) }
@@ -97,17 +97,17 @@ struct TargetGauge: View {
             HStack {
                 Text(title.uppercased()).font(Theme.label).tracking(1.2).foregroundStyle(Theme.textDim)
                 Spacer()
-                if let target { Text("target \(display(target))\(unit)").font(.caption2).foregroundStyle(Theme.textDim) }
+                if let target { Text("target \(display(target))\(unit)").font(Theme.font(.caption2)).foregroundStyle(Theme.textDim) }
             }
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(value.map(display) ?? "––").font(Theme.reading(44)).foregroundStyle(status)
                     .shadow(color: status.opacity(0.6), radius: 10)
-                Text(unit).font(.system(.callout, design: .rounded)).foregroundStyle(Theme.textDim)
+                Text(unit).font(Theme.font(.callout)).foregroundStyle(Theme.textDim)
             }
             GeometryReader { g in
                 let w = g.size.width
                 ZStack(alignment: .leading) {
-                    Capsule().fill(Color.white.opacity(0.08))
+                    Capsule().fill(Theme.text.opacity(0.08))
                     Capsule().fill(Theme.alien.opacity(0.25)).frame(width: w * 0.3).offset(x: w * 0.35)
                     if let value, let target {
                         let span = max(tolerance * 5, 10)
@@ -123,7 +123,7 @@ struct TargetGauge: View {
 
     var statusColor: Color {
         guard let value else { return Theme.textDim }
-        guard let target else { return .white }
+        guard let target else { return Theme.text }
         let d = abs(value - target)
         return d <= tolerance ? Theme.alien : d <= tolerance * 2 ? Theme.warn : Theme.danger
     }
@@ -137,10 +137,10 @@ struct KeyValueRow: View {
         HStack {
             Text(key).foregroundStyle(Theme.textDim)
             Spacer()
-            Text(value).font(.system(.body, design: .rounded).monospacedDigit().weight(.semibold))
-            if !unit.isEmpty { Text(unit).font(.caption).foregroundStyle(Theme.textDim) }
+            Text(value).font(Theme.font(.body).monospacedDigit().weight(.semibold))
+            if !unit.isEmpty { Text(unit).font(Theme.font(.caption)).foregroundStyle(Theme.textDim) }
         }
-        .font(.system(.subheadline, design: .rounded))
+        .font(Theme.font(.subheadline))
     }
 }
 
@@ -174,9 +174,9 @@ struct SaveToJobSheet: View {
                             } label: {
                                 HStack {
                                     VStack(alignment: .leading) {
-                                        Text(job.title).foregroundStyle(.white)
+                                        Text(job.title).foregroundStyle(Theme.text)
                                         Text(job.address.isEmpty ? job.created.formatted(date: .abbreviated, time: .omitted) : job.address)
-                                            .font(.caption).foregroundStyle(Theme.textDim)
+                                            .font(Theme.font(.caption)).foregroundStyle(Theme.textDim)
                                     }
                                     Spacer()
                                     if job.id == model.jobs.activeJobID { StatusPill(text: "ACTIVE", color: Theme.alien) }
@@ -186,7 +186,7 @@ struct SaveToJobSheet: View {
                     }
                 }
                 Section("Record") {
-                    Text(record.title).font(.headline)
+                    Text(record.title).font(Theme.font(.headline))
                     ForEach(record.values) { KeyValueRow(key: $0.label, value: $0.value) }
                 }
             }

@@ -12,9 +12,9 @@ struct JobsView: View {
                 if model.jobs.jobs.isEmpty {
                     VStack(spacing: 12) {
                         AlienGlyph(color: Theme.alien.opacity(0.6)).frame(width: 50)
-                        Text("No jobs yet").font(.headline)
+                        Text("No jobs yet").font(Theme.font(.headline))
                         Text("Create a job to keep customer, equipment and measurements together and send a PDF report.")
-                            .font(.caption).foregroundStyle(Theme.textDim).multilineTextAlignment(.center)
+                            .font(Theme.font(.caption)).foregroundStyle(Theme.textDim).multilineTextAlignment(.center)
                     }
                     .frame(maxWidth: .infinity).padding(.vertical, 30)
                     .listRowBackground(Color.clear)
@@ -23,13 +23,13 @@ struct JobsView: View {
                     NavigationLink(value: job.id) {
                         VStack(alignment: .leading, spacing: 4) {
                             HStack {
-                                Text(job.title).font(.system(.headline, design: .rounded))
+                                Text(job.title).font(Theme.font(.headline))
                                 if job.id == model.jobs.activeJobID { StatusPill(text: "ACTIVE", color: Theme.alien) }
                             }
                             Text([job.address, job.equipment.refrigerant].filter { !$0.isEmpty }.joined(separator: " · "))
-                                .font(.caption).foregroundStyle(Theme.textDim)
+                                .font(Theme.font(.caption)).foregroundStyle(Theme.textDim)
                             Text("\(job.records.count) records · \(job.created.formatted(date: .abbreviated, time: .shortened))")
-                                .font(.caption2).foregroundStyle(Theme.textDim)
+                                .font(Theme.font(.caption2)).foregroundStyle(Theme.textDim)
                         }
                     }
                     .listRowBackground(Theme.spaceRaised.opacity(0.7))
@@ -129,16 +129,16 @@ struct JobDetailView: View {
                 }
             }
             Section("Measurements") {
-                if job.records.isEmpty { Text("Use \"Save to job\" on the Charge screen and in Tools.").font(.caption).foregroundStyle(Theme.textDim) }
+                if job.records.isEmpty { Text("Use \"Save to job\" on the Charge screen and in Tools.").font(Theme.font(.caption)).foregroundStyle(Theme.textDim) }
                 ForEach(job.records) { r in
                     VStack(alignment: .leading, spacing: 6) {
                         HStack {
-                            Text(r.title).font(.headline)
+                            Text(r.title).font(Theme.font(.headline))
                             Spacer()
-                            Text(r.date.formatted(date: .omitted, time: .shortened)).font(.caption).foregroundStyle(Theme.textDim)
+                            Text(r.date.formatted(date: .omitted, time: .shortened)).font(Theme.font(.caption)).foregroundStyle(Theme.textDim)
                         }
                         if let v = r.verdict {
-                            Text(v).font(.subheadline.weight(.semibold)).foregroundStyle(r.verdictGood == true ? Theme.alien : r.verdictGood == false ? Theme.danger : Theme.beam)
+                            Text(v).font(Theme.font(.subheadline, weight: .semibold)).foregroundStyle(r.verdictGood == true ? Theme.alien : r.verdictGood == false ? Theme.danger : Theme.beam)
                         }
                         ForEach(r.values) { KeyValueRow(key: $0.label, value: $0.value) }
                     }

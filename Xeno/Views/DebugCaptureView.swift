@@ -20,20 +20,20 @@ struct DebugCaptureView: View {
                 Toggle("Recording packets", isOn: $lab.recording)
                 Toggle("Include non-Fieldpiece devices", isOn: $lab.showAllVendors)
                 Text("\(lab.log.count) packets · \(model.bluetooth.devices.count) devices · \(lab.notes.count) display notes")
-                    .font(.caption).foregroundStyle(Theme.textDim)
+                    .font(Theme.font(.caption)).foregroundStyle(Theme.textDim)
             } header: { Text("1 · Record") } footer: {
                 Text("Turn recording on, switch the probes on and keep them near the phone. Change what they measure (warm a clamp in your hand, pressurise a probe) while recording.")
             }
 
             Section {
-                if model.probes.probes.isEmpty { Text("No probes decoded yet. Raw packets are still being recorded.").font(.caption).foregroundStyle(Theme.textDim) }
+                if model.probes.probes.isEmpty { Text("No probes decoded yet. Raw packets are still being recorded.").font(Theme.font(.caption)).foregroundStyle(Theme.textDim) }
                 ForEach(model.probes.probes) { p in
                     Button { noting = p; displayText = "" } label: {
                         HStack {
                             VStack(alignment: .leading) {
-                                Text(p.displayName).foregroundStyle(.white)
+                                Text(p.displayName).foregroundStyle(Theme.text)
                                 Text(p.readings.map { r in let (v, u) = model.fmt.reading(r); return "\(r.label) \(v) \(u)" }.joined(separator: " · "))
-                                    .font(.caption2).foregroundStyle(Theme.textDim)
+                                    .font(Theme.font(.caption2)).foregroundStyle(Theme.textDim)
                             }
                             Spacer()
                             Image(systemName: "square.and.pencil").foregroundStyle(Theme.alien)
@@ -42,7 +42,7 @@ struct DebugCaptureView: View {
                 }
                 ForEach(lab.notes.reversed()) { n in
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("\(n.model) \(n.probe): display shows \"\(n.displayShows)\"").font(.caption)
+                        Text("\(n.model) \(n.probe): display shows \"\(n.displayShows)\"").font(Theme.font(.caption))
                         Text(n.hex).font(.system(.caption2, design: .monospaced)).foregroundStyle(Theme.alien).lineLimit(2)
                     }
                 }
@@ -55,13 +55,13 @@ struct DebugCaptureView: View {
                 TextField("Send to (email)", text: $email).keyboardType(.emailAddress).textInputAutocapitalization(.never)
                 Button { build() } label: { Label("Build debug zip", systemImage: "doc.zipper") }
                 if let bundle {
-                    Text(bundle.lastPathComponent).font(.caption).foregroundStyle(Theme.textDim)
+                    Text(bundle.lastPathComponent).font(Theme.font(.caption)).foregroundStyle(Theme.textDim)
                     if MFMailComposeViewController.canSendMail() {
                         Button { mailing = true } label: { Label("Email zip", systemImage: "envelope") }
                     }
                     ShareLink(item: bundle) { Label("Share zip (Mail, Messages, Files, AirDrop…)", systemImage: "square.and.arrow.up") }
                 }
-                if let error { Text(error).font(.caption).foregroundStyle(Theme.danger) }
+                if let error { Text(error).font(Theme.font(.caption)).foregroundStyle(Theme.danger) }
             } header: { Text("3 · Send") }
 
             Section {

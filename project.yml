@@ -19,6 +19,8 @@ targets:
       path: Xeno/Info.plist
       properties:
         CFBundleDisplayName: Xeno
+        UIAppFonts:
+          - XenoDot.ttf
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSApplicationCategoryType: public.app-category.utilities

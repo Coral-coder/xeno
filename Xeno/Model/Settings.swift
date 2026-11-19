@@ -21,6 +21,7 @@ struct XenoSettings: Codable, Equatable {
     var demoMode: Bool = false
     var staleSeconds: Double = 20
     var keepAwake: Bool = true
+    var theme: ThemeKind = .biolume
 
     var atmPsia: Double { Units.atmosphericPsia(altitudeFt: altitudeFt) }
 }

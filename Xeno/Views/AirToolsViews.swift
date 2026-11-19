@@ -45,7 +45,7 @@ struct PressureTestView: View {
                                 KeyValueRow(key: "Temp-compensated expected", value: fmt.pressure(expected), unit: fmt.pUnit)
                                 KeyValueRow(key: "Now", value: fmt.pressure(p), unit: fmt.pUnit)
                                 KeyValueRow(key: "Corrected loss", value: fmt.pressure(loss), unit: fmt.pUnit)
-                                Text(pass ? "HOLDING" : "LOSING PRESSURE — look for a leak").font(.system(.headline, design: .rounded)).foregroundStyle(pass ? Theme.alien : Theme.danger)
+                                Text(pass ? "HOLDING" : "LOSING PRESSURE — look for a leak").font(Theme.font(.headline)).foregroundStyle(pass ? Theme.alien : Theme.danger)
                                 SeriesChart(samples: samples, kind: .pressure, color: Theme.beam).frame(height: 160)
                                 HStack {
                                     Button("Stop") { self.start = nil }.buttonStyle(GlowButtonStyle(color: Theme.danger))
@@ -56,8 +56,8 @@ struct PressureTestView: View {
                     } else {
                         XenoCard {
                             VStack(alignment: .leading, spacing: 10) {
-                                Text("Pressurise with dry nitrogen, let it stabilise, then start. Temperature changes are compensated (Gay-Lussac's law).").font(.caption).foregroundStyle(Theme.textDim)
-                                Stepper("Allowed drop: \(allowedDrop.formatted(decimals: 1)) psi", value: $allowedDrop, in: 0...10, step: 0.5).font(.subheadline)
+                                Text("Pressurise with dry nitrogen, let it stabilise, then start. Temperature changes are compensated (Gay-Lussac's law).").font(Theme.font(.caption)).foregroundStyle(Theme.textDim)
+                                Stepper("Allowed drop: \(allowedDrop.formatted(decimals: 1)) psi", value: $allowedDrop, in: 0...10, step: 0.5).font(Theme.font(.subheadline))
                                 Button { if let p { start = (.now, p, t); samples = [] } } label: { Label("Start test", systemImage: "play.fill") }
                                     .buttonStyle(GlowButtonStyle(color: Theme.beam)).disabled(p == nil)
                             }
@@ -106,13 +106,13 @@ struct AirflowView: View {
                             VStack(alignment: .leading, spacing: 8) {
                                 RoleInput(role: .returnAir, caption: "Return DB", size: 26)
                                 RoleInput(role: .returnAir, caption: "Return RH", humidity: true, size: 20)
-                                Text("WB \(fmt.temp(ret?.wetBulbF))  DP \(fmt.temp(ret?.dewPointF))").font(.caption).foregroundStyle(Theme.textDim)
+                                Text("WB \(fmt.temp(ret?.wetBulbF))  DP \(fmt.temp(ret?.dewPointF))").font(Theme.font(.caption)).foregroundStyle(Theme.textDim)
                             }
                             Spacer()
                             VStack(alignment: .leading, spacing: 8) {
                                 RoleInput(role: .supplyAir, caption: "Supply DB", size: 26)
                                 RoleInput(role: .supplyAir, caption: "Supply RH", humidity: true, size: 20)
-                                Text("WB \(fmt.temp(sup?.wetBulbF))  DP \(fmt.temp(sup?.dewPointF))").font(.caption).foregroundStyle(Theme.textDim)
+                                Text("WB \(fmt.temp(sup?.wetBulbF))  DP \(fmt.temp(sup?.dewPointF))").font(Theme.font(.caption)).foregroundStyle(Theme.textDim)
                             }
                         }
                     }
@@ -121,12 +121,12 @@ struct AirflowView: View {
                             HStack {
                                 Text("Airflow").foregroundStyle(Theme.textDim)
                                 TextField("CFM", text: $cfmText).keyboardType(.numberPad).multilineTextAlignment(.trailing).font(Theme.reading(20))
-                                Text("CFM").font(.caption).foregroundStyle(Theme.textDim)
+                                Text("CFM").font(Theme.font(.caption)).foregroundStyle(Theme.textDim)
                             }
                             HStack {
                                 Text("Nominal size").foregroundStyle(Theme.textDim)
                                 TextField("tons", text: $tonsText).keyboardType(.decimalPad).multilineTextAlignment(.trailing).font(Theme.reading(20))
-                                Text("tons").font(.caption).foregroundStyle(Theme.textDim)
+                                Text("tons").font(Theme.font(.caption)).foregroundStyle(Theme.textDim)
                             }
                             if tons > 0 { KeyValueRow(key: "CFM per ton", value: (cfm / tons).formatted(decimals: 0)) }
                         }
@@ -208,11 +208,11 @@ struct StaticPressureView: View {
                             HStack {
                                 Text("Rated max ESP").foregroundStyle(Theme.textDim)
                                 TextField("0.50", text: $ratedText).keyboardType(.decimalPad).multilineTextAlignment(.trailing)
-                                Text(s.staticUnit.rawValue).font(.caption).foregroundStyle(Theme.textDim)
+                                Text(s.staticUnit.rawValue).font(Theme.font(.caption)).foregroundStyle(Theme.textDim)
                             }
                             if let tesp {
                                 Text(tesp <= rated ? "Within the blower's rated static" : "Above rated — restricted ductwork, filter or coil")
-                                    .font(.subheadline).foregroundStyle(tesp <= rated ? Theme.alien : Theme.danger)
+                                    .font(Theme.font(.subheadline)).foregroundStyle(tesp <= rated ? Theme.alien : Theme.danger)
                                 Button { saving = JobRecord(title: "Static pressure", values: [
                                     .init(label: "Supply", value: "\(fmt.stat(sup)) \(s.staticUnit.rawValue)"),
                                     .init(label: "Return", value: "\(fmt.stat(ret)) \(s.staticUnit.rawValue)"),
@@ -257,10 +257,10 @@ struct LabeledField: View {
         HStack {
             Text(label).foregroundStyle(Theme.textDim)
             TextField("", text: $text).keyboardType(.decimalPad).multilineTextAlignment(.trailing)
-                .font(.system(.body, design: .rounded).monospacedDigit().weight(.semibold))
-            if !unit.isEmpty { Text(unit).font(.caption).foregroundStyle(Theme.textDim) }
+                .font(Theme.font(.body).monospacedDigit().weight(.semibold))
+            if !unit.isEmpty { Text(unit).font(Theme.font(.caption)).foregroundStyle(Theme.textDim) }
         }
-        .font(.system(.subheadline, design: .rounded))
+        .font(Theme.font(.subheadline))
     }
 }
 
@@ -280,7 +280,7 @@ struct TargetSuperheatView: View {
                             VStack(alignment: .leading, spacing: 8) {
                                 RoleInput(role: .returnAir, caption: "Indoor DB", size: 24)
                                 RoleInput(role: .returnAir, caption: "Indoor RH", humidity: true, size: 20)
-                                Text("Indoor WB \(fmt.temp(ret?.wetBulbF))").font(.caption).foregroundStyle(Theme.textDim)
+                                Text("Indoor WB \(fmt.temp(ret?.wetBulbF))").font(Theme.font(.caption)).foregroundStyle(Theme.textDim)
                             }
                             Spacer()
                             RoleInput(role: .outdoorAir, caption: "Outdoor DB", size: 24)
@@ -291,14 +291,14 @@ struct TargetSuperheatView: View {
                             TargetGauge(title: "Actual vs target superheat", value: actual.map { model.settings.temperatureUnit.deltaFromF($0) },
                                         target: target.map { model.settings.temperatureUnit.deltaFromF($0) }, tolerance: 5, unit: fmt.dUnit) { $0.formatted(decimals: 1) }
                             if ret != nil && od != nil && target == nil {
-                                Text("Outside the chart (target < 5°F): don't charge by superheat in these conditions; use weigh-in.").font(.caption).foregroundStyle(Theme.warn)
+                                Text("Outside the chart (target < 5°F): don't charge by superheat in these conditions; use weigh-in.").font(Theme.font(.caption)).foregroundStyle(Theme.warn)
                             }
                             if let target, let actual {
                                 Text(actual > target + 5 ? "Superheat high: add refrigerant" : actual < target - 5 ? "Superheat low: recover refrigerant" : "On target")
-                                    .font(.system(.headline, design: .rounded))
+                                    .font(Theme.font(.headline))
                                     .foregroundStyle(abs(actual - target) <= 5 ? Theme.alien : Theme.warn)
                             }
-                            Text("For fixed-orifice (piston/cap tube) systems only. TXV/EEV systems charge by subcooling. Formula: (3 × indoor WB − 80 − outdoor DB) ÷ 2.").font(.caption).foregroundStyle(Theme.textDim)
+                            Text("For fixed-orifice (piston/cap tube) systems only. TXV/EEV systems charge by subcooling. Formula: (3 × indoor WB − 80 − outdoor DB) ÷ 2.").font(Theme.font(.caption)).foregroundStyle(Theme.textDim)
                         }
                     }
                 }
@@ -377,7 +377,7 @@ struct FurnaceView: View {
                                 Spacer()
                                 ReadingView(caption: "Airflow", value: rise.flatMap { HVACCalc.cfmFromTempRise(outputBTUh: output, riseF: $0, psia: model.settings.atmPsia) }.map { $0.formatted(decimals: 0) } ?? "––", unit: "CFM", color: Theme.beam)
                             }
-                            Text("Compare the rise with the range on the furnace rating plate (typically 35–65°F).").font(.caption).foregroundStyle(Theme.textDim)
+                            Text("Compare the rise with the range on the furnace rating plate (typically 35–65°F).").font(Theme.font(.caption)).foregroundStyle(Theme.textDim)
                         }
                     }
                 }

@@ -54,22 +54,27 @@ jobs:
           xcrun simctl install "$udid" "$app"
           mkdir -p screenshots
           shot() {
-            name=$1; shift
+            name=$1; theme=$2; shift 2
             xcrun simctl terminate "$udid" com.lightwave.xeno 2>/dev/null || true
-            xcrun simctl launch "$udid" com.lightwave.xeno -XenoDemo YES -XenoNoBluetooth YES -XenoSampleJob YES "$@"
+            xcrun simctl launch "$udid" com.lightwave.xeno -XenoDemo YES -XenoNoBluetooth YES -XenoSampleJob YES -XenoTheme "$theme" "$@"
             sleep 8
             xcrun simctl io "$udid" screenshot "screenshots/$name.png"
           }
-          shot 01-probes -XenoTab probes
-          shot 02-charge -XenoTab charge
-          shot 03-tools -XenoTab tools
-          shot 04-vacuum -XenoTab tools -XenoTool vacuum
-          shot 05-airflow -XenoTab tools -XenoTool airflow
-          shot 06-pt-chart -XenoTab tools -XenoTool pt
-          shot 07-static -XenoTab tools -XenoTool static
-          shot 08-debug-capture -XenoTab tools -XenoTool debug
-          shot 09-jobs -XenoTab jobs
-          shot 10-settings -XenoTab settings
+          shot 01-probes biolume -XenoTab probes
+          shot 02-charge biolume -XenoTab charge
+          shot 03-tools biolume -XenoTab tools
+          shot 04-vacuum biolume -XenoTab tools -XenoTool vacuum
+          shot 05-airflow biolume -XenoTab tools -XenoTool airflow
+          shot 06-pt-chart biolume -XenoTab tools -XenoTool pt
+          shot 07-static biolume -XenoTab tools -XenoTool static
+          shot 08-debug-capture biolume -XenoTab tools -XenoTool debug
+          shot 09-jobs biolume -XenoTab jobs
+          shot 10-settings biolume -XenoTab settings
+          shot 11-vfd-probes vfd -XenoTab probes
+          shot 12-vfd-charge vfd -XenoTab charge
+          shot 13-vfd-vacuum vfd -XenoTab tools -XenoTool vacuum
+          shot 14-vfd-tools vfd -XenoTab tools
+          shot 15-vfd-settings vfd -XenoTab settings
           ls -la screenshots
       - name: Commit screenshots
         run: |

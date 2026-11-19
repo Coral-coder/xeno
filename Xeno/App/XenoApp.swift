@@ -5,17 +5,7 @@ struct XenoApp: App {
     @State private var model = AppModel()
 
     init() {
-        let nav = UINavigationBarAppearance()
-        nav.configureWithTransparentBackground()
-        nav.largeTitleTextAttributes = [.foregroundColor: UIColor.white, .font: UIFont.rounded(size: 32, weight: .bold)]
-        nav.titleTextAttributes = [.foregroundColor: UIColor.white, .font: UIFont.rounded(size: 17, weight: .semibold)]
-        UINavigationBar.appearance().standardAppearance = nav
-        UINavigationBar.appearance().scrollEdgeAppearance = nav
-        let tab = UITabBarAppearance()
-        tab.configureWithDefaultBackground()
-        tab.backgroundColor = UIColor(red: 0.02, green: 0.03, blue: 0.07, alpha: 0.85)
-        UITabBar.appearance().standardAppearance = tab
-        UITabBar.appearance().scrollEdgeAppearance = tab
+        Theme.applyUIKitAppearance()
     }
 
     var body: some Scene {
@@ -23,7 +13,6 @@ struct XenoApp: App {
             RootView()
                 .environment(model)
                 .preferredColorScheme(.dark)
-                .tint(Theme.alien)
                 .onAppear { model.start(); UIApplication.shared.isIdleTimerDisabled = model.settings.keepAwake }
                 .onChange(of: model.settings.keepAwake) { _, on in UIApplication.shared.isIdleTimerDisabled = on }
         }
@@ -50,5 +39,13 @@ struct RootView: View {
             JobsView().tabItem { Label("Jobs", systemImage: "folder") }.tag(AppTab.jobs)
             SettingsView().tabItem { Label("Settings", systemImage: "gearshape") }.tag(AppTab.settings)
         }
+        .tint(Theme.alien)
+        .foregroundStyle(Theme.text)
+        .fontDesign(Theme.design)
+        .font(Theme.font(.body))
+        .overlay { if Theme.isVFD { VFDOverlay() } }
+        // Rebuild every screen (and UIKit bars) when the theme changes.
+        .id(model.settings.theme)
+        .onChange(of: model.settings.theme) { _, _ in Theme.applyUIKitAppearance() }
     }
 }

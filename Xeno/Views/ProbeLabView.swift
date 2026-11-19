@@ -19,7 +19,7 @@ struct ProbeLabView: View {
                     Spacer()
                     Text(model.bluetooth.advertsPerSecond.formatted(decimals: 1)).monospacedDigit()
                 }
-                if !lab.log.isEmpty { Text("\(lab.log.count) packets recorded").font(.caption).foregroundStyle(Theme.textDim) }
+                if !lab.log.isEmpty { Text("\(lab.log.count) packets recorded").font(Theme.font(.caption)).foregroundStyle(Theme.textDim) }
             } footer: {
                 Text("Fieldpiece Job Link probes broadcast their readings; Xeno decodes them without pairing. If a reading doesn't match the probe's display, open the probe type below and adjust the field mapping.")
             }
@@ -36,10 +36,10 @@ struct ProbeLabView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             HStack {
                                 Text(isFP ? "\(model.lab.layout(for: type)?.model ?? "Unknown") (\(type))" : (p.name ?? "Unnamed device"))
-                                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                                    .font(Theme.font(.subheadline, weight: .semibold))
                                 if isFP && model.lab.overrides[type] != nil { StatusPill(text: "CUSTOM", color: Theme.nebula) }
                                 Spacer()
-                                Text("\(p.rssi) dBm").font(.caption2).foregroundStyle(Theme.textDim)
+                                Text("\(p.rssi) dBm").font(Theme.font(.caption2)).foregroundStyle(Theme.textDim)
                             }
                             Text(p.hex).font(.system(.caption2, design: .monospaced)).foregroundStyle(Theme.alien).lineLimit(2)
                         }
@@ -138,12 +138,12 @@ struct LayoutEditorView: View {
                 Picker("Category", selection: $layout.category) {
                     ForEach(ProbeCategory.allCases, id: \.self) { Text($0.title).tag($0) }
                 }
-                Text(layout.provenance).font(.caption).foregroundStyle(Theme.textDim)
+                Text(layout.provenance).font(Theme.font(.caption)).foregroundStyle(Theme.textDim)
             } header: { Text("Type \(typeCode)") }
 
             Section("Fields") {
                 if layout.special == .clampMeter {
-                    Text("Two-channel meter: decoded from value/range/mode bytes.").font(.caption).foregroundStyle(Theme.textDim)
+                    Text("Two-channel meter: decoded from value/range/mode bytes.").font(Theme.font(.caption)).foregroundStyle(Theme.textDim)
                 }
                 ForEach(layout.fields.indices, id: \.self) { i in
                     FieldEditor(field: $layout.fields[i], sample: sample)
@@ -189,7 +189,7 @@ struct FieldEditor: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                TextField("Label", text: $field.label).font(.headline)
+                TextField("Label", text: $field.label).font(Theme.font(.headline))
                 Spacer()
                 if let v = field.value(in: sample) {
                     Text(v.formatted(decimals: 2) + " " + field.kind.canonicalUnit).foregroundStyle(Theme.alien).monospacedDigit()
@@ -202,7 +202,7 @@ struct FieldEditor: View {
                 .pickerStyle(.segmented)
             Picker("Convert", selection: $field.transform) { ForEach(FieldTransform.allCases) { Text($0.rawValue).tag($0) } }
         }
-        .font(.subheadline)
+        .font(Theme.font(.subheadline))
     }
 }
 
@@ -225,18 +225,18 @@ struct ExplorerView: View {
                 ForEach(devices) { d in
                     VStack(alignment: .leading, spacing: 4) {
                         HStack {
-                            Text(d.name ?? "Unnamed").font(.system(.subheadline, design: .rounded).weight(.semibold))
+                            Text(d.name ?? "Unnamed").font(Theme.font(.subheadline, weight: .semibold))
                             if FieldpieceDecoder.isFieldpiece(d.manufacturer) { StatusPill(text: "FIELDPIECE", color: Theme.alien) }
                             if (d.name ?? "").localizedCaseInsensitiveContains("NAVAC") { StatusPill(text: "NAVAC", color: Theme.beam) }
                             Spacer()
-                            Text("\(d.rssi)").font(.caption).foregroundStyle(Theme.textDim)
+                            Text("\(d.rssi)").font(Theme.font(.caption)).foregroundStyle(Theme.textDim)
                         }
                         if !d.manufacturer.isEmpty {
                             Text(d.manufacturer.map { String(format: "%02X", $0) }.joined(separator: " ")).font(.system(.caption2, design: .monospaced)).foregroundStyle(Theme.alien).lineLimit(2)
                         }
-                        if !d.services.isEmpty { Text(d.services.joined(separator: ", ")).font(.caption2).foregroundStyle(Theme.textDim) }
+                        if !d.services.isEmpty { Text(d.services.joined(separator: ", ")).font(Theme.font(.caption2)).foregroundStyle(Theme.textDim) }
                         if d.connectable {
-                            Button("Connect & inspect GATT") { model.bluetooth.connect(d.id) }.font(.caption.weight(.semibold))
+                            Button("Connect & inspect GATT") { model.bluetooth.connect(d.id) }.font(Theme.font(.caption, weight: .semibold))
                         }
                     }
                 }
@@ -259,7 +259,7 @@ struct GATTView: View {
                 ForEach(session.characteristics.values.sorted { $0.id < $1.id }) { c in
                     VStack(alignment: .leading, spacing: 4) {
                         Text(c.id).font(.system(.caption, design: .monospaced))
-                        Text("\(c.properties) · service \(c.service)").font(.caption2).foregroundStyle(Theme.textDim)
+                        Text("\(c.properties) · service \(c.service)").font(Theme.font(.caption2)).foregroundStyle(Theme.textDim)
                         if !c.lastValue.isEmpty {
                             Text(c.lastValue.map { String(format: "%02X", $0) }.joined(separator: " ")).font(.system(.caption2, design: .monospaced)).foregroundStyle(Theme.alien)
                         }
@@ -267,7 +267,7 @@ struct GATTView: View {
                             if c.properties.contains("read") { Button("Read") { session.read(c.id) } }
                             if c.properties.contains("write") { Button("Write…") { target = c.id } }
                         }
-                        .font(.caption.weight(.semibold))
+                        .font(Theme.font(.caption, weight: .semibold))
                         .buttonStyle(.borderless)
                     }
                 }

@@ -37,10 +37,10 @@ struct ToolsView: View {
                         NavigationLink(value: t.id) {
                             XenoCard(glow: t.color) {
                                 VStack(alignment: .leading, spacing: 10) {
-                                    Image(systemName: t.symbol).font(.title2).foregroundStyle(t.color)
+                                    Image(systemName: t.symbol).font(Theme.font(.title2)).foregroundStyle(t.color)
                                         .shadow(color: t.color.opacity(0.7), radius: 8)
-                                    Text(t.title).font(.system(.headline, design: .rounded)).foregroundStyle(.white)
-                                    Text(t.subtitle).font(.caption).foregroundStyle(Theme.textDim).lineLimit(2, reservesSpace: true)
+                                    Text(t.title).font(Theme.font(.headline)).foregroundStyle(Theme.text)
+                                    Text(t.subtitle).font(Theme.font(.caption)).foregroundStyle(Theme.textDim).lineLimit(2, reservesSpace: true)
                                 }
                             }
                         }
