@@ -27,7 +27,7 @@ struct VacuumView: View {
                             HStack {
                                 Text("Target \(fmt.vacuum(s.vacuumTarget)) \(s.vacuumUnit.rawValue)")
                                 Spacer()
-                                Text("Rate \(VacuumAnalysis.rate(Array(history.suffix(60))).formatted(decimals: 0)) µ/min")
+                                Text("Rate \(max(0, VacuumAnalysis.rate(Array(history.suffix(60))).rounded()).formatted(decimals: 0)) µ/min")
                             }
                             .font(.caption).foregroundStyle(Theme.textDim)
                             if model.value(.vacuum) == nil {
