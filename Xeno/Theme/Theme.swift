@@ -199,21 +199,6 @@ struct VFDBackground: View {
     }
 }
 
-/// Faint scanlines and a tube vignette over the whole VFD interface.
-struct VFDOverlay: View {
-    var body: some View {
-        Canvas { ctx, size in
-            var scan = Path()
-            var y: CGFloat = 0
-            while y < size.height { scan.addRect(CGRect(x: 0, y: y, width: size.width, height: 1)); y += 3 }
-            ctx.fill(scan, with: .color(.black.opacity(0.16)))
-        }
-        .overlay(RadialGradient(colors: [.clear, .black.opacity(0.4)], center: .center, startRadius: 240, endRadius: 720))
-        .allowsHitTesting(false)
-        .ignoresSafeArea()
-    }
-}
-
 struct SeededRandom {
     var state: UInt64
     init(seed: UInt64) { state = seed }

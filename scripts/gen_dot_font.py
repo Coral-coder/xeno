@@ -133,7 +133,7 @@ g('≤', '...#. ..#.. .#... ..#.. ...#. ..... #####')
 g('≥', '.#... ..#.. ...#. ..#.. .#... ..... #####')
 g('≈', '..... .#... #.#.# ...#. .#... #.#.# ...#.')
 
-CELL, DOT = 100, 80   # one pixel = 100 font units; 80 lit + 20 gap (4 + 1 device px in the app)
+CELL, DOT = 100, 100  # one pixel = 100 font units, solid; the app's screen grid draws the gaps
 
 def dot(pen, x, y, size):
     """One square pixel with its corner on the cell grid, clockwise for TrueType."""

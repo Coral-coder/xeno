@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Helpers for drawing graphics on the VFD pixel grid: every mark is made of the same square
-/// pixels as the dot-matrix fonts (pitch `Theme.vfdPixel`, 80 % lit).
+/// pixels as the dot-matrix fonts (pitch `Theme.vfdPixel`; the screen grid draws the gaps).
 struct PixelGrid {
     let size: CGSize
     var pitch: CGFloat { Theme.vfdPixel }
@@ -9,7 +9,7 @@ struct PixelGrid {
     var rows: Int { max(1, Int(size.height / pitch)) }
 
     func rect(_ c: Int, _ r: Int) -> CGRect {
-        CGRect(x: CGFloat(c) * pitch, y: CGFloat(r) * pitch, width: pitch * 0.8, height: pitch * 0.8)
+        CGRect(x: CGFloat(c) * pitch, y: CGFloat(r) * pitch, width: pitch, height: pitch)
     }
 
     func fill(_ ctx: GraphicsContext, _ cells: [(Int, Int)], _ color: Color) {

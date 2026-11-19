@@ -43,9 +43,9 @@ struct RootView: View {
         .foregroundStyle(Theme.text)
         .fontDesign(Theme.design)
         .font(Theme.font(.body))
-        .overlay { if Theme.isVFD { VFDOverlay() } }
         // Rebuild every screen (and UIKit bars) when the theme changes.
         .id(model.settings.theme)
         .onChange(of: model.settings.theme) { _, _ in Theme.applyUIKitAppearance() }
+        .onAppear { DispatchQueue.main.async { VFDDisplay.shared.apply(Theme.isVFD) } }
     }
 }
