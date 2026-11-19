@@ -86,6 +86,15 @@ enum Theme {
         isVFD ? vfdFont : .system(size: size, weight: weight, design: design)
     }
 
+    /// Card / panel outline for the current theme.
+    static var cardShape: AnyShape {
+        isVFD ? AnyShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
+              : AnyShape(UnevenRoundedRectangle(topLeadingRadius: 28, bottomLeadingRadius: 10, bottomTrailingRadius: 28, topTrailingRadius: 10, style: .continuous))
+    }
+    static var buttonShape: AnyShape {
+        isVFD ? AnyShape(RoundedRectangle(cornerRadius: 2)) : AnyShape(Capsule())
+    }
+
     static func applyUIKitAppearance() {
         let ui = UIColor(text)
         func font(_ size: CGFloat, _ w: UIFont.Weight) -> UIFont {
