@@ -91,7 +91,7 @@ struct ThemeSwatch: View {
         let p = kind == .vfd ? Palette.vfd : Palette.biolume
         ZStack {
             RoundedRectangle(cornerRadius: kind == .vfd ? 3 : 12).fill(p.space)
-            Text(kind == .vfd ? "88.8" : "40°").font(kind == .vfd ? Font.custom(Theme.dotFont, size: 16) : .system(size: 15, weight: .bold, design: p.design)).foregroundStyle(p.alien)
+            Text(kind == .vfd ? "88.8" : "40°").font(kind == .vfd ? Font.custom(Theme.dotFont, fixedSize: Theme.vfdSize) : .system(size: 15, weight: .bold, design: p.design)).foregroundStyle(p.alien)
                 .shadow(color: kind == .vfd ? .clear : p.alien, radius: kind == .vfd ? 0 : 4)
         }
         .frame(width: 54, height: 40)

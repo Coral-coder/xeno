@@ -41,7 +41,7 @@ struct ProbeLabView: View {
                                 Spacer()
                                 Text("\(p.rssi) dBm").font(Theme.font(.caption2)).foregroundStyle(Theme.textDim)
                             }
-                            Text(p.hex).font(.system(.caption2, design: .monospaced)).foregroundStyle(Theme.alien).lineLimit(2)
+                            Text(p.hex).font(Theme.mono(.caption2)).foregroundStyle(Theme.alien).lineLimit(2)
                         }
                     }
                 }
@@ -55,7 +55,7 @@ struct ProbeLabView: View {
                         HStack {
                             Text(model.lab.layout(for: code)?.model ?? code)
                             Spacer()
-                            Text(code).font(.system(.caption, design: .monospaced)).foregroundStyle(Theme.textDim)
+                            Text(code).font(Theme.mono(.caption)).foregroundStyle(Theme.textDim)
                             if lab.overrides[code] != nil { StatusPill(text: "CUSTOM", color: Theme.nebula) }
                         }
                     }
@@ -92,7 +92,7 @@ struct RawBytesView: View {
     var body: some View {
         List {
             Section("Packet") {
-                Text(packet.hex).font(.system(.body, design: .monospaced)).textSelection(.enabled)
+                Text(packet.hex).font(Theme.mono(.body)).textSelection(.enabled)
             }
             ByteTable(bytes: packet.bytes)
         }
@@ -117,7 +117,7 @@ struct ByteTable: View {
                         Text((Double(v) / 100).formatted(decimals: 2)).frame(width: 70, alignment: .trailing).foregroundStyle(Theme.textDim)
                     }
                 }
-                .font(.system(.caption, design: .monospaced))
+                .font(Theme.mono(.caption))
             }
         }
     }
@@ -166,7 +166,7 @@ struct LayoutEditorView: View {
             }
             if !sample.isEmpty {
                 Section("Latest packet") {
-                    Text(sample.map { String(format: "%02X", $0) }.joined(separator: " ")).font(.system(.caption, design: .monospaced)).textSelection(.enabled)
+                    Text(sample.map { String(format: "%02X", $0) }.joined(separator: " ")).font(Theme.mono(.caption)).textSelection(.enabled)
                 }
                 ByteTable(bytes: sample)
             }
@@ -232,7 +232,7 @@ struct ExplorerView: View {
                             Text("\(d.rssi)").font(Theme.font(.caption)).foregroundStyle(Theme.textDim)
                         }
                         if !d.manufacturer.isEmpty {
-                            Text(d.manufacturer.map { String(format: "%02X", $0) }.joined(separator: " ")).font(.system(.caption2, design: .monospaced)).foregroundStyle(Theme.alien).lineLimit(2)
+                            Text(d.manufacturer.map { String(format: "%02X", $0) }.joined(separator: " ")).font(Theme.mono(.caption2)).foregroundStyle(Theme.alien).lineLimit(2)
                         }
                         if !d.services.isEmpty { Text(d.services.joined(separator: ", ")).font(Theme.font(.caption2)).foregroundStyle(Theme.textDim) }
                         if d.connectable {
@@ -258,10 +258,10 @@ struct GATTView: View {
             Section("Characteristics") {
                 ForEach(session.characteristics.values.sorted { $0.id < $1.id }) { c in
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(c.id).font(.system(.caption, design: .monospaced))
+                        Text(c.id).font(Theme.mono(.caption))
                         Text("\(c.properties) · service \(c.service)").font(Theme.font(.caption2)).foregroundStyle(Theme.textDim)
                         if !c.lastValue.isEmpty {
-                            Text(c.lastValue.map { String(format: "%02X", $0) }.joined(separator: " ")).font(.system(.caption2, design: .monospaced)).foregroundStyle(Theme.alien)
+                            Text(c.lastValue.map { String(format: "%02X", $0) }.joined(separator: " ")).font(Theme.mono(.caption2)).foregroundStyle(Theme.alien)
                         }
                         HStack {
                             if c.properties.contains("read") { Button("Read") { session.read(c.id) } }
@@ -274,13 +274,13 @@ struct GATTView: View {
             }
             if !target.isEmpty {
                 Section("Write to \(target)") {
-                    TextField("Hex bytes, e.g. 01 02", text: $writeHex).font(.system(.body, design: .monospaced))
+                    TextField("Hex bytes, e.g. 01 02", text: $writeHex).font(Theme.mono(.body))
                     Button("Send") { session.write(target, hex: writeHex) }
                 }
             }
             Section("Log") {
                 ForEach(session.lines.suffix(300).reversed()) { l in
-                    Text(l.text).font(.system(.caption2, design: .monospaced))
+                    Text(l.text).font(Theme.mono(.caption2))
                 }
             }
         }

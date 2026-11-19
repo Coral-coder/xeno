@@ -43,7 +43,7 @@ struct DebugCaptureView: View {
                 ForEach(lab.notes.reversed()) { n in
                     VStack(alignment: .leading, spacing: 2) {
                         Text("\(n.model) \(n.probe): display shows \"\(n.displayShows)\"").font(Theme.font(.caption))
-                        Text(n.hex).font(.system(.caption2, design: .monospaced)).foregroundStyle(Theme.alien).lineLimit(2)
+                        Text(n.hex).font(Theme.mono(.caption2)).foregroundStyle(Theme.alien).lineLimit(2)
                     }
                 }
             } header: { Text("2 · Note what the probe screen shows") } footer: {

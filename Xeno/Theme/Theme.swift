@@ -64,46 +64,32 @@ enum Theme {
     /// Original 5x7 square-pixel font (Resources/Fonts/XenoDot.ttf, scripts/gen_dot_font.py).
     static let dotFont = "XenoDot-Regular"
 
+    /// VFD pixel pitch in points. Every VFD glyph is drawn at exactly this pixel size
+    /// (5 device pixels on 3x screens), so the whole theme shares one pixel grid.
+    static let vfdPixel: CGFloat = 5.0 / 3.0
+    /// The one VFD font size: 10 font units of 100 per pixel cell.
+    static var vfdSize: CGFloat { vfdPixel * 10 }
+    static var vfdFont: Font { .custom(dotFont, fixedSize: vfdSize) }
+
     static func reading(_ size: CGFloat = 34) -> Font {
-        isVFD ? .custom(dotFont, fixedSize: size * 1.05) : .system(size: size, weight: .semibold, design: design).monospacedDigit()
+        isVFD ? vfdFont : .system(size: size, weight: .semibold, design: design).monospacedDigit()
     }
+    /// Monospaced text (hex dumps, logs).
+    static func mono(_ style: Font.TextStyle) -> Font { isVFD ? vfdFont : .system(style, design: .monospaced) }
     static var label: Font { font(.caption, weight: .semibold) }
 
     static func font(_ style: Font.TextStyle, weight: Font.Weight = .regular) -> Font {
-        guard isVFD else { return .system(style, design: design).weight(weight) }
-        let size: CGFloat
-        switch style {
-        case .largeTitle: size = 34
-        case .title: size = 28
-        case .title2: size = 23
-        case .title3: size = 21
-        case .headline, .body: size = 18
-        case .callout: size = 17
-        case .subheadline: size = 16
-        case .footnote: size = 14
-        case .caption: size = 13
-        default: size = 12
-        }
-        return .custom(dotFont, size: size, relativeTo: style)
+        isVFD ? vfdFont : .system(style, design: design).weight(weight)
     }
 
     static func font(size: CGFloat, weight: Font.Weight = .regular) -> Font {
-        isVFD ? .custom(dotFont, size: size * 1.05) : .system(size: size, weight: weight, design: design)
-    }
-
-    /// Card / panel outline for the current theme.
-    static var cardShape: AnyShape {
-        isVFD ? AnyShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
-              : AnyShape(UnevenRoundedRectangle(topLeadingRadius: 28, bottomLeadingRadius: 10, bottomTrailingRadius: 28, topTrailingRadius: 10, style: .continuous))
-    }
-    static var buttonShape: AnyShape {
-        isVFD ? AnyShape(RoundedRectangle(cornerRadius: 2)) : AnyShape(Capsule())
+        isVFD ? vfdFont : .system(size: size, weight: weight, design: design)
     }
 
     static func applyUIKitAppearance() {
         let ui = UIColor(text)
         func font(_ size: CGFloat, _ w: UIFont.Weight) -> UIFont {
-            isVFD ? (UIFont(name: dotFont, size: size) ?? UIFont.monospacedSystemFont(ofSize: size, weight: w)) : UIFont.rounded(size: size, weight: w)
+            isVFD ? (UIFont(name: dotFont, size: vfdSize) ?? UIFont.monospacedSystemFont(ofSize: vfdSize, weight: w)) : UIFont.rounded(size: size, weight: w)
         }
         let nav = UINavigationBarAppearance()
         nav.configureWithTransparentBackground()
@@ -291,7 +277,7 @@ struct ReadingView: View {
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(value).font(Theme.reading(size)).foregroundStyle(color)
                     .glow(color: color.opacity(Theme.isVFD ? 0.8 : 0.35), radius: Theme.isVFD ? 5 : 6)
-                    .lineLimit(1).minimumScaleFactor(0.5)
+                    .lineLimit(1).xenoScale(0.5)
                 Text(unit).font(Theme.font(.footnote)).foregroundStyle(Theme.textDim)
             }
         }
@@ -361,5 +347,12 @@ extension View {
     /// Bioluminescent glow; the VFD theme draws crisp pixels with no halo.
     func glow(color: Color, radius: CGFloat) -> some View {
         shadow(color: Theme.isVFD ? .clear : color, radius: Theme.isVFD ? 0 : radius)
+    }
+}
+
+extension View {
+    /// Shrink-to-fit, except in VFD where every pixel stays the same size.
+    func xenoScale(_ factor: CGFloat) -> some View {
+        minimumScaleFactor(Theme.isVFD ? 1 : factor)
     }
 }

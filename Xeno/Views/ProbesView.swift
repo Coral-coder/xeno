@@ -138,7 +138,7 @@ struct ProbeCard: View {
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
                         if probe.readings.count > 1 { Text(r.label).font(Theme.font(.caption2)).foregroundStyle(Theme.textDim).frame(width: 52, alignment: .leading).lineLimit(1) }
                         Text(v).font(Theme.reading(probe.readings.count > 1 ? 20 : 30)).foregroundStyle(stale ? Theme.textDim : Theme.text)
-                            .lineLimit(1).minimumScaleFactor(0.6)
+                            .lineLimit(1).xenoScale(0.6)
                         Text(u).font(Theme.font(.caption2)).foregroundStyle(Theme.textDim)
                     }
                 }

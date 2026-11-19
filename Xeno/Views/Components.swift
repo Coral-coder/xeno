@@ -21,7 +21,7 @@ struct RoleInput: View {
             }
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 if let live {
-                    Text(format(live, s)).font(Theme.reading(size)).foregroundStyle(color).lineLimit(1).minimumScaleFactor(0.5)
+                    Text(format(live, s)).font(Theme.reading(size)).foregroundStyle(color).lineLimit(1).xenoScale(0.5)
                 } else {
                     TextField("––", text: $text)
                         .keyboardType(.numbersAndPunctuation)

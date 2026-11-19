@@ -133,14 +133,14 @@ g('≤', '...#. ..#.. .#... ..#.. ...#. ..... #####')
 g('≥', '.#... ..#.. ...#. ..#.. .#... ..... #####')
 g('≈', '..... .#... #.#.# ...#. .#... #.#.# ...#.')
 
-CELL, DOT, ADV = 100, 86, 600   # 86-unit square pixels with a thin gap, like a VFD grid
+CELL, DOT, ADV = 100, 80, 600   # square pixels: 4 lit + 1 gap device pixels at the app's VFD size
 
-def dot(pen, cx, cy, r):
-    """One square pixel, clockwise for TrueType."""
-    pen.moveTo((cx - r, cy - r))
-    pen.lineTo((cx - r, cy + r))
-    pen.lineTo((cx + r, cy + r))
-    pen.lineTo((cx + r, cy - r))
+def dot(pen, x, y, s):
+    """One square pixel with its corner on the cell grid (keeps edges on device pixels), clockwise."""
+    pen.moveTo((x, y))
+    pen.lineTo((x, y + s))
+    pen.lineTo((x + s, y + s))
+    pen.lineTo((x + s, y))
     pen.closePath()
 
 def build(rows, desc):
@@ -148,9 +148,8 @@ def build(rows, desc):
     for i, row in enumerate(rows + desc):
         for j, c in enumerate(row):
             if c == '#':
-                cx = CELL * j + CELL // 2
-                cy = CELL * (6 - i) + CELL // 2   # row 6 sits on the baseline
-                dot(pen, cx, cy, DOT // 2)
+                # Row 6 sits on the baseline; each pixel fills 80% of its cell (4 of 5 device px).
+                dot(pen, CELL * j, CELL * (6 - i) + (CELL - DOT), DOT)
     return pen.glyph()
 
 names = ['.notdef']

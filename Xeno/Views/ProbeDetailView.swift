@@ -85,7 +85,7 @@ struct ProbeDetailView: View {
                 XenoCard(glow: Theme.nebula) {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(probe.raw.map { String(format: "%02X", $0) }.joined(separator: " "))
-                            .font(.system(.caption, design: .monospaced)).textSelection(.enabled)
+                            .font(Theme.mono(.caption)).textSelection(.enabled)
                         if let layout = model.lab.layout(for: probe.typeCode) {
                             Text(layout.provenance).font(Theme.font(.caption2)).foregroundStyle(Theme.textDim)
                         }
