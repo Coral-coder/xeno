@@ -61,8 +61,11 @@ enum Theme {
     static var textDim: Color { p.textDim }
     static var design: Font.Design { p.design }
 
-    /// Original 5x7 square-pixel font (Resources/Fonts/XenoDot.ttf, scripts/gen_dot_font.py).
+    /// Original square-pixel fonts (scripts/gen_dot_font.py): 5x7, 10x14 and 15x21 glyphs, all
+    /// with the same pixel size. Bigger text uses more pixels, never bigger pixels.
     static let dotFont = "XenoDot-Regular"
+    static let dotFontMid = "XenoDotMid-Regular"
+    static let dotFontBig = "XenoDotBig-Regular"
 
     /// VFD pixel pitch in points. Every VFD glyph is drawn at exactly this pixel size
     /// (5 device pixels on 3x screens), so the whole theme shares one pixel grid.
@@ -70,20 +73,28 @@ enum Theme {
     /// The one VFD font size: 10 font units of 100 per pixel cell.
     static var vfdSize: CGFloat { vfdPixel * 10 }
     static var vfdFont: Font { .custom(dotFont, fixedSize: vfdSize) }
+    static var vfdFontMid: Font { .custom(dotFontMid, fixedSize: vfdSize) }
+    static var vfdFontBig: Font { .custom(dotFontBig, fixedSize: vfdSize) }
 
+    /// Readouts: big digits (15x21 px) for hero values, 10x14 for secondary ones.
     static func reading(_ size: CGFloat = 34) -> Font {
-        isVFD ? vfdFont : .system(size: size, weight: .semibold, design: design).monospacedDigit()
+        guard isVFD else { return .system(size: size, weight: .semibold, design: design).monospacedDigit() }
+        return size >= 36 ? vfdFontBig : size >= 20 ? vfdFontMid : vfdFont
     }
     /// Monospaced text (hex dumps, logs).
     static func mono(_ style: Font.TextStyle) -> Font { isVFD ? vfdFont : .system(style, design: .monospaced) }
     static var label: Font { font(.caption, weight: .semibold) }
 
     static func font(_ style: Font.TextStyle, weight: Font.Weight = .regular) -> Font {
-        isVFD ? vfdFont : .system(style, design: design).weight(weight)
+        guard isVFD else { return .system(style, design: design).weight(weight) }
+        switch style {
+        case .largeTitle, .title, .title2: return vfdFontMid
+        default: return vfdFont
+        }
     }
 
     static func font(size: CGFloat, weight: Font.Weight = .regular) -> Font {
-        isVFD ? vfdFont : .system(size: size, weight: weight, design: design)
+        isVFD ? (size >= 36 ? vfdFontBig : size >= 20 ? vfdFontMid : vfdFont) : .system(size: size, weight: weight, design: design)
     }
 
     /// Card / panel outline for the current theme.
@@ -98,7 +109,8 @@ enum Theme {
     static func applyUIKitAppearance() {
         let ui = UIColor(text)
         func font(_ size: CGFloat, _ w: UIFont.Weight) -> UIFont {
-            isVFD ? (UIFont(name: dotFont, size: vfdSize) ?? UIFont.monospacedSystemFont(ofSize: vfdSize, weight: w)) : UIFont.rounded(size: size, weight: w)
+            let name = size >= 24 ? dotFontMid : dotFont
+            return isVFD ? (UIFont(name: name, size: vfdSize) ?? UIFont.monospacedSystemFont(ofSize: vfdSize, weight: w)) : UIFont.rounded(size: size, weight: w)
         }
         let nav = UINavigationBarAppearance()
         nav.configureWithTransparentBackground()

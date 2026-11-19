@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generates Xeno/Resources/Fonts/XenoDot.ttf: an original 5x7 dot-matrix font in the style
+"""Generates Xeno/Resources/Fonts/XenoDot{,Mid,Big}.ttf: an original 5x7 dot-matrix font (plus\n10x14 and 15x21 versions drawn with more pixels of the same size) in the style
 of a vacuum-fluorescent display. Each lit pixel is a square. pip install fonttools."""
 import math, sys
 from fontTools.fontBuilder import FontBuilder
@@ -133,46 +133,97 @@ g('≤', '...#. ..#.. .#... ..#.. ...#. ..... #####')
 g('≥', '.#... ..#.. ...#. ..#.. .#... ..... #####')
 g('≈', '..... .#... #.#.# ...#. .#... #.#.# ...#.')
 
-CELL, DOT, ADV = 100, 80, 600   # square pixels: 4 lit + 1 gap device pixels at the app's VFD size
+CELL, DOT = 100, 80   # one pixel = 100 font units; 80 lit + 20 gap (4 + 1 device px in the app)
 
-def dot(pen, x, y, s):
-    """One square pixel with its corner on the cell grid (keeps edges on device pixels), clockwise."""
+def dot(pen, x, y, size):
+    """One square pixel with its corner on the cell grid, clockwise for TrueType."""
     pen.moveTo((x, y))
-    pen.lineTo((x, y + s))
-    pen.lineTo((x + s, y + s))
-    pen.lineTo((x + s, y))
+    pen.lineTo((x, y + size))
+    pen.lineTo((x + size, y + size))
+    pen.lineTo((x + size, y))
     pen.closePath()
 
-def build(rows, desc):
+def scale2x(g):
+    h, w = len(g), len(g[0])
+    at = lambda y, x: g[y][x] if 0 <= y < h and 0 <= x < w else 0
+    out = [[0] * (w * 2) for _ in range(h * 2)]
+    for y in range(h):
+        for x in range(w):
+            P, A, B, C, D = at(y, x), at(y - 1, x), at(y, x + 1), at(y, x - 1), at(y + 1, x)
+            out[2*y][2*x] = A if C == A and C != D and A != B else P
+            out[2*y][2*x+1] = B if A == B and A != C and B != D else P
+            out[2*y+1][2*x] = C if D == C and D != B and C != A else P
+            out[2*y+1][2*x+1] = D if B == D and B != A and D != C else P
+    return out
+
+def scale3x(g):
+    h, w = len(g), len(g[0])
+    at = lambda y, x: g[y][x] if 0 <= y < h and 0 <= x < w else 0
+    out = [[0] * (w * 3) for _ in range(h * 3)]
+    for y in range(h):
+        for x in range(w):
+            A, B, C = at(y-1, x-1), at(y-1, x), at(y-1, x+1)
+            D, E, F = at(y, x-1), at(y, x), at(y, x+1)
+            G, H, I = at(y+1, x-1), at(y+1, x), at(y+1, x+1)
+            if B != H and D != F:
+                e = [D if D == B else E,
+                     B if (D == B and E != C) or (B == F and E != A) else E,
+                     F if B == F else E,
+                     D if (D == B and E != G) or (D == H and E != A) else E,
+                     E,
+                     F if (B == F and E != I) or (H == F and E != C) else E,
+                     D if D == H else E,
+                     H if (D == H and E != I) or (H == F and E != G) else E,
+                     F if H == F else E]
+            else:
+                e = [E] * 9
+            for k in range(9):
+                out[3*y + k // 3][3*x + k % 3] = e[k]
+    return out
+
+def bitmap(rows, desc):
+    # 7 rows above the baseline + 2 descender rows, always.
+    full = rows + (desc + ['.....'] * 2)[:2]
+    return [[1 if c == '#' else 0 for c in r] for r in full]
+
+def build(grid, scale):
     pen = TTGlyphPen(None)
-    for i, row in enumerate(rows + desc):
-        for j, c in enumerate(row):
-            if c == '#':
-                # Row 6 sits on the baseline; each pixel fills 80% of its cell (4 of 5 device px).
-                dot(pen, CELL * j, CELL * (6 - i) + (CELL - DOT), DOT)
+    above = 7 * scale   # rows above the baseline
+    for i, row in enumerate(grid):
+        for j, v in enumerate(row):
+            if v:
+                dot(pen, CELL * j, CELL * (above - 1 - i) + (CELL - DOT), DOT)
     return pen.glyph()
 
-names = ['.notdef']
-glyphs = {'.notdef': build(['#####', '#...#', '#...#', '#...#', '#...#', '#...#', '#####'], [])}
-cmap = {}
-for ch, (rows, desc) in G.items():
-    assert len(rows) == 7 and all(len(r) == 5 for r in rows + desc), (ch, rows)
-    name = 'uni%04X' % ord(ch)
-    names.append(name)
-    glyphs[name] = build(rows, desc)
-    cmap[ord(ch)] = name
+def make(path, scale, family, ps):
+    up = {1: lambda g: g, 2: scale2x, 3: scale3x}[scale]
+    names = ['.notdef']
+    glyphs = {'.notdef': build(up(bitmap(['#####', '#...#', '#...#', '#...#', '#...#', '#...#', '#####'], [])), scale)}
+    cmap = {}
+    for ch, (rows, desc) in G.items():
+        assert len(rows) == 7 and all(len(r) == 5 for r in rows + desc), (ch, rows)
+        name = 'uni%04X' % ord(ch)
+        names.append(name)
+        glyphs[name] = build(up(bitmap(rows, desc)), scale)
+        cmap[ord(ch)] = name
+    adv = 6 * scale * CELL
+    asc, desc_ = (7 * scale + 1) * CELL, 2 * scale * CELL + 60
+    fb = FontBuilder(1000, isTTF=True)
+    fb.setupGlyphOrder(names)
+    fb.setupCharacterMap(cmap)
+    fb.setupGlyf(glyphs)
+    fb.setupHorizontalMetrics({n: (adv, 0) for n in names})
+    fb.setupHorizontalHeader(ascent=asc, descent=-desc_)
+    fb.setupNameTable({"familyName": family, "styleName": "Regular", "psName": ps, "fullName": family + " Regular",
+                       "version": "Version 1.0", "copyright": "Original dot-matrix design for Xeno"})
+    fb.setupOS2(sTypoAscender=asc, sTypoDescender=-desc_, sTypoLineGap=0, usWinAscent=asc, usWinDescent=desc_,
+                sxHeight=500 * scale, sCapHeight=700 * scale)
+    fb.setupPost(isFixedPitch=1)
+    fb.save(path)
+    print(ps, len(names), "glyphs")
 
-fb = FontBuilder(1000, isTTF=True)
-fb.setupGlyphOrder(names)
-fb.setupCharacterMap(cmap)
-fb.setupGlyf(glyphs)
-fb.setupHorizontalMetrics({n: (ADV, 0) for n in names})
-fb.setupHorizontalHeader(ascent=820, descent=-260)
-fb.setupNameTable({"familyName": "Xeno Dot", "styleName": "Regular", "psName": "XenoDot-Regular",
-                   "fullName": "Xeno Dot Regular", "version": "Version 1.0",
-                   "copyright": "Original dot-matrix design for Xeno"})
-fb.setupOS2(sTypoAscender=820, sTypoDescender=-260, sTypoLineGap=60, usWinAscent=820, usWinDescent=260,
-            sxHeight=500, sCapHeight=700)
-fb.setupPost(isFixedPitch=1)
-fb.save(sys.argv[1])
-print("glyphs:", len(names))
+# Same pixel size in all three; larger text uses more pixels (5x7, 10x14, 15x21).
+out = sys.argv[1] if len(sys.argv) > 1 else "Xeno/Resources/Fonts"
+make(f"{out}/XenoDot.ttf", 1, "Xeno Dot", "XenoDot-Regular")
+make(f"{out}/XenoDotMid.ttf", 2, "Xeno Dot Mid", "XenoDotMid-Regular")
+make(f"{out}/XenoDotBig.ttf", 3, "Xeno Dot Big", "XenoDotBig-Regular")

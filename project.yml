@@ -21,6 +21,8 @@ targets:
         CFBundleDisplayName: Xeno
         UIAppFonts:
           - XenoDot.ttf
+          - XenoDotMid.ttf
+          - XenoDotBig.ttf
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSApplicationCategoryType: public.app-category.utilities
