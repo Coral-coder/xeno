@@ -19,7 +19,7 @@ struct VacuumView: View {
                             Text("VACUUM").font(Theme.label).tracking(2).foregroundStyle(Theme.textDim)
                             HStack(alignment: .firstTextBaseline, spacing: 6) {
                                 Text(fmt.vacuum(microns)).font(Theme.reading(72)).foregroundStyle(color(microns))
-                                    .shadow(color: color(microns).opacity(0.7), radius: 16)
+                                    .glow(color: color(microns).opacity(0.7), radius: 16)
                                 Text(s.vacuumUnit.rawValue).font(Theme.font(.title3)).foregroundStyle(Theme.textDim)
                             }
                             MicronScale(microns: microns, target: s.vacuumTarget)
@@ -115,7 +115,7 @@ struct MicronScale: View {
                 Capsule().fill(LinearGradient(colors: [Theme.alien, Theme.warn, Theme.danger], startPoint: .leading, endPoint: .trailing)).opacity(0.35).frame(height: 8)
                 Rectangle().fill(Theme.text.opacity(0.7)).frame(width: 1.5, height: 16).offset(x: x(target))
                 if let microns {
-                    Circle().fill(Theme.text).frame(width: 14, height: 14).shadow(color: Theme.alien, radius: 6).offset(x: x(microns) - 7)
+                    Circle().fill(Theme.text).frame(width: 14, height: 14).glow(color: Theme.alien, radius: 6).offset(x: x(microns) - 7)
                 }
                 ForEach([100.0, 500, 1000, 5000, 20000], id: \.self) { m in
                     Text(m >= 1000 ? "\(Int(m / 1000))k" : "\(Int(m))").font(Theme.font(size: 9)).foregroundStyle(Theme.textDim)

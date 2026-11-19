@@ -245,12 +245,12 @@ struct XenoCard<Content: View>: View {
                         shape.stroke(LinearGradient(colors: [glow.opacity(0.75), glow.opacity(0.10), glow.opacity(0.35)],
                                                           startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1.2)
                         // Bio-node on the membrane edge.
-                        Circle().fill(glow).frame(width: 6, height: 6).shadow(color: glow, radius: 5)
+                        Circle().fill(glow).frame(width: 6, height: 6).glow(color: glow, radius: 5)
                             .offset(x: 30, y: -3)
                     }
                 }
             }
-            .shadow(color: glow.opacity(Theme.isVFD ? 0.10 : 0.22), radius: Theme.isVFD ? 4 : 12)
+            .glow(color: glow.opacity(Theme.isVFD ? 0.10 : 0.22), radius: Theme.isVFD ? 4 : 12)
     }
 }
 
@@ -264,7 +264,7 @@ struct SectionHeader: View {
                 Text(title.uppercased()).tracking(2)
                 Text(String(repeating: "·", count: 40)).lineLimit(1).foregroundStyle(Theme.textDim)
             } else {
-                Circle().fill(Theme.alien).frame(width: 7, height: 7).shadow(color: Theme.alien, radius: 4)
+                Circle().fill(Theme.alien).frame(width: 7, height: 7).glow(color: Theme.alien, radius: 4)
                 if let symbol { Image(systemName: symbol) }
                 Text(title.uppercased()).tracking(1.6)
                 Capsule().fill(LinearGradient(colors: [Theme.alien.opacity(0.5), .clear], startPoint: .leading, endPoint: .trailing))
@@ -290,7 +290,7 @@ struct ReadingView: View {
             Text(Theme.isVFD ? caption.uppercased() : caption).font(Theme.label).foregroundStyle(Theme.textDim)
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(value).font(Theme.reading(size)).foregroundStyle(color)
-                    .shadow(color: color.opacity(Theme.isVFD ? 0.8 : 0.35), radius: Theme.isVFD ? 5 : 6)
+                    .glow(color: color.opacity(Theme.isVFD ? 0.8 : 0.35), radius: Theme.isVFD ? 5 : 6)
                     .lineLimit(1).minimumScaleFactor(0.5)
                 Text(unit).font(Theme.font(.footnote)).foregroundStyle(Theme.textDim)
             }
@@ -324,7 +324,7 @@ struct GlowButtonStyle: ButtonStyle {
             .background(shape.fill(LinearGradient(colors: [color.opacity(configuration.isPressed ? 0.40 : 0.28), color.opacity(configuration.isPressed ? 0.25 : 0.10)], startPoint: .top, endPoint: .bottom)))
             .overlay(shape.stroke(color.opacity(0.85), lineWidth: 1))
             .foregroundStyle(color)
-            .shadow(color: color.opacity(0.35), radius: configuration.isPressed ? 2 : 8)
+            .glow(color: color.opacity(0.35), radius: configuration.isPressed ? 2 : 8)
     }
 }
 
@@ -354,5 +354,12 @@ extension View {
     func xenoScreen() -> some View {
         self.scrollContentBackground(.hidden).background(SpaceBackground())
             .fontDesign(Theme.design)
+    }
+}
+
+extension View {
+    /// Bioluminescent glow; the VFD theme draws crisp pixels with no halo.
+    func glow(color: Color, radius: CGFloat) -> some View {
+        shadow(color: Theme.isVFD ? .clear : color, radius: Theme.isVFD ? 0 : radius)
     }
 }

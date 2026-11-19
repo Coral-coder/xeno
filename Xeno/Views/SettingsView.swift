@@ -92,7 +92,7 @@ struct ThemeSwatch: View {
         ZStack {
             RoundedRectangle(cornerRadius: kind == .vfd ? 3 : 12).fill(p.space)
             Text(kind == .vfd ? "88.8" : "40°").font(kind == .vfd ? Font.custom(Theme.dotFont, size: 16) : .system(size: 15, weight: .bold, design: p.design)).foregroundStyle(p.alien)
-                .shadow(color: p.alien, radius: 4)
+                .shadow(color: kind == .vfd ? .clear : p.alien, radius: kind == .vfd ? 0 : 4)
         }
         .frame(width: 54, height: 40)
         .overlay(RoundedRectangle(cornerRadius: kind == .vfd ? 3 : 12).stroke(p.alien.opacity(0.6)))

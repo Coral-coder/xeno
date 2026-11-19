@@ -24,7 +24,7 @@ struct WeighInView: View {
                             ZStack {
                                 Circle().stroke(Theme.text.opacity(0.08), lineWidth: 16)
                                 Circle().trim(from: 0, to: progress).stroke(progress >= 1 ? Theme.alien : Theme.beam, style: StrokeStyle(lineWidth: 16, lineCap: .round))
-                                    .rotationEffect(.degrees(-90)).shadow(color: Theme.beam.opacity(0.6), radius: 8)
+                                    .rotationEffect(.degrees(-90)).glow(color: Theme.beam.opacity(0.6), radius: 8)
                                 VStack(spacing: 2) {
                                     Text(charged.map { lbOz($0) } ?? "––").font(Theme.reading(36))
                                     Text("of \(lbOz(target))").font(Theme.font(.caption)).foregroundStyle(Theme.textDim)

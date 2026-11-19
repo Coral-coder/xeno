@@ -103,7 +103,7 @@ struct EmptyProbes: View {
     var body: some View {
         VStack(spacing: 16) {
             AlienGlyph(color: Theme.alien.opacity(0.8)).frame(width: 80)
-                .shadow(color: Theme.alien.opacity(0.6), radius: 20)
+                .glow(color: Theme.alien.opacity(0.6), radius: 20)
             Text("Searching the airwaves…").font(Theme.font(.title3, weight: .semibold))
             Text("Turn on your Fieldpiece Job Link probes. They appear here automatically. No pairing needed.")
                 .font(Theme.font(.subheadline)).foregroundStyle(Theme.textDim).multilineTextAlignment(.center)

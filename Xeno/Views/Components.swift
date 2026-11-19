@@ -101,7 +101,7 @@ struct TargetGauge: View {
             }
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(value.map(display) ?? "––").font(Theme.reading(44)).foregroundStyle(status)
-                    .shadow(color: status.opacity(0.6), radius: 10)
+                    .glow(color: status.opacity(0.6), radius: 10)
                 Text(unit).font(Theme.font(.callout)).foregroundStyle(Theme.textDim)
             }
             GeometryReader { g in
@@ -112,7 +112,7 @@ struct TargetGauge: View {
                     if let value, let target {
                         let span = max(tolerance * 5, 10)
                         let x = min(max((value - target) / span * 0.5 + 0.5, 0.02), 0.98)
-                        Circle().fill(status).frame(width: 12, height: 12).shadow(color: status, radius: 6)
+                        Circle().fill(status).frame(width: 12, height: 12).glow(color: status, radius: 6)
                             .offset(x: w * x - 6)
                     }
                 }
