@@ -345,7 +345,7 @@ struct AlienGlyph: View {
 extension View {
     func xenoScreen() -> some View {
         self.scrollContentBackground(.hidden).background(SpaceBackground())
-            .fontDesign(Theme.design)
+            .fontDesign(Theme.isVFD ? nil : Theme.design)
     }
 }
 

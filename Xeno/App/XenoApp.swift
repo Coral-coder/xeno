@@ -41,7 +41,7 @@ struct RootView: View {
         }
         .tint(Theme.alien)
         .foregroundStyle(Theme.text)
-        .fontDesign(Theme.design)
+        .fontDesign(Theme.isVFD ? nil : Theme.design)
         .font(Theme.font(.body))
         // Rebuild every screen (and UIKit bars) when the theme changes.
         .id(model.settings.theme)
