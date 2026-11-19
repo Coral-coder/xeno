@@ -53,8 +53,15 @@ struct VFDRootView: View {
                     if state.decayStart != nil, let m = model.input(.vacuum) { state.decay.append(TimedSample(t: now, value: m)) }
                 }
             }
+            // The reader respects the safe area (so the insets are real); the matrix itself fills
+            // the whole screen from (0,0) so every cell lines up with the device pixels.
+            .ignoresSafeArea()
         }
-        .ignoresSafeArea()
+        .onAppear {
+            // Screenshot workflow: -XenoTool vacuum|pt|airflow|static|targetsh opens that screen.
+            let routes: [String: VFDRoute] = ["vacuum": .vacuum, "pt": .pt, "airflow": .airflow, "static": .staticP, "targetsh": .targetSH]
+            if state.stack.isEmpty, let t = UserDefaults.standard.string(forKey: "XenoTool"), let r = routes[t] { state.stack = [r] }
+        }
         .sheet(item: $fallback) { f in
             NavigationStack {
                 fallbackView(f)
