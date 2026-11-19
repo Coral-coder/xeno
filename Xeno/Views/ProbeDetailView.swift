@@ -122,13 +122,16 @@ struct SeriesChart: View {
     var body: some View {
         let s = model.settings
         Chart {
-            ForEach(Array(samples.enumerated()), id: \.offset) { _, p in
+            ForEach(Array(samples.filter { !logScale || $0.value > 0 }.enumerated()), id: \.offset) { _, p in
                 LineMark(x: .value("Time", p.t), y: .value("Value", convert(p.value, s)))
                     .foregroundStyle(color)
                     .interpolationMethod(.monotone)
-                AreaMark(x: .value("Time", p.t), y: .value("Value", convert(p.value, s)))
-                    .foregroundStyle(LinearGradient(colors: [color.opacity(0.35), color.opacity(0)], startPoint: .top, endPoint: .bottom))
-                    .interpolationMethod(.monotone)
+                // An area fills down to zero, which doesn't exist on a log axis.
+                if !logScale {
+                    AreaMark(x: .value("Time", p.t), y: .value("Value", convert(p.value, s)))
+                        .foregroundStyle(LinearGradient(colors: [color.opacity(0.35), color.opacity(0)], startPoint: .top, endPoint: .bottom))
+                        .interpolationMethod(.monotone)
+                }
             }
             if let threshold {
                 RuleMark(y: .value("Limit", convert(threshold, s)))

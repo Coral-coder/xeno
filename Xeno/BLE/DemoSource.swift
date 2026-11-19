@@ -46,7 +46,7 @@ final class DemoSource {
         send(packet("BG", serial: 0x4A22, body: pad5 + [0, 0] + le(liquid * Units.kPaPerPsi, 1) + [0, 0, 0, 0, 0, 74]), -61)
         // JL3PC suction / liquid line
         send(packet("BF", serial: 0x8791, body: pad5 + le(50.6 + wob(0.6, 19)) + [0, 0]), -55)
-        send(packet("BF", serial: 0x8792, body: pad5 + le(97.2 + wob(0.5, 27)) + [0, 0]), -63)
+        send(packet("BF", serial: 0x8792, body: pad5 + le(93.4 + wob(0.5, 27)) + [0, 0]), -63)
         // JL3RH return / supply / outdoor
         func rh(_ serial: UInt16, db: Double, rh: Double, battery: UInt8, rssi: Int) {
             let a = AirState(dryBulbF: db, relativeHumidity: rh, pressurePsia: Units.seaLevelPsia)
