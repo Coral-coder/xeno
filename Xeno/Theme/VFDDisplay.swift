@@ -66,7 +66,7 @@ extension VFDDisplay {
     private func walk(_ layer: CALayer, _ nearest: Bool) {
         let filter: CALayerContentsFilter = nearest ? .nearest : .linear
         if layer.minificationFilter != filter { layer.minificationFilter = filter }
-        if nearest, layer.magnificationFilter != .nearest { layer.magnificationFilter = .nearest }
+        if layer.magnificationFilter != filter { layer.magnificationFilter = filter }
         layer.sublayers?.forEach { walk($0, nearest) }
     }
 }
