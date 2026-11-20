@@ -1,0 +1,252 @@
+#!/usr/bin/env python3
+"""Generates Xeno/Resources/Fonts/XenoDot{,Mid,Big}.ttf: an original 5x7 dot-matrix font (plus\n10x14 and 15x21 versions drawn with more pixels of the same size) in the style
+of a vacuum-fluorescent display. Each lit pixel is a square. pip install fonttools."""
+import math, sys
+from fontTools.fontBuilder import FontBuilder
+from fontTools.pens.ttGlyphPen import TTGlyphPen
+
+G = {}
+def g(ch, rows, desc=None):
+    G[ch] = (rows.split(), desc.split() if desc else [])
+
+g(' ', '..... ..... ..... ..... ..... ..... .....')
+g('0', '.###. #...# #..## #.#.# ##..# #...# .###.')
+g('1', '..#.. .##.. ..#.. ..#.. ..#.. ..#.. .###.')
+g('2', '.###. #...# ....# ...#. ..#.. .#... #####')
+g('3', '##### ...#. ..#.. ...#. ....# #...# .###.')
+g('4', '...#. ..##. .#.#. #..#. ##### ...#. ...#.')
+g('5', '##### #.... ####. ....# ....# #...# .###.')
+g('6', '..##. .#... #.... ####. #...# #...# .###.')
+g('7', '##### ....# ...#. ..#.. .#... .#... .#...')
+g('8', '.###. #...# #...# .###. #...# #...# .###.')
+g('9', '.###. #...# #...# .#### ....# ...#. .##..')
+g('A', '.###. #...# #...# #...# ##### #...# #...#')
+g('B', '####. #...# #...# ####. #...# #...# ####.')
+g('C', '.###. #...# #.... #.... #.... #...# .###.')
+g('D', '###.. #..#. #...# #...# #...# #..#. ###..')
+g('E', '##### #.... #.... ####. #.... #.... #####')
+g('F', '##### #.... #.... ####. #.... #.... #....')
+g('G', '.###. #...# #.... #.### #...# #...# .####')
+g('H', '#...# #...# #...# ##### #...# #...# #...#')
+g('I', '.###. ..#.. ..#.. ..#.. ..#.. ..#.. .###.')
+g('J', '..### ...#. ...#. ...#. ...#. #..#. .##..')
+g('K', '#...# #..#. #.#.. ##... #.#.. #..#. #...#')
+g('L', '#.... #.... #.... #.... #.... #.... #####')
+g('M', '#...# ##.## #.#.# #.#.# #...# #...# #...#')
+g('N', '#...# #...# ##..# #.#.# #..## #...# #...#')
+g('O', '.###. #...# #...# #...# #...# #...# .###.')
+g('P', '####. #...# #...# ####. #.... #.... #....')
+g('Q', '.###. #...# #...# #...# #.#.# #..#. .##.#')
+g('R', '####. #...# #...# ####. #.#.. #..#. #...#')
+g('S', '.#### #.... #.... .###. ....# ....# ####.')
+g('T', '##### ..#.. ..#.. ..#.. ..#.. ..#.. ..#..')
+g('U', '#...# #...# #...# #...# #...# #...# .###.')
+g('V', '#...# #...# #...# #...# #...# .#.#. ..#..')
+g('W', '#...# #...# #...# #.#.# #.#.# #.#.# .#.#.')
+g('X', '#...# #...# .#.#. ..#.. .#.#. #...# #...#')
+g('Y', '#...# #...# .#.#. ..#.. ..#.. ..#.. ..#..')
+g('Z', '##### ....# ...#. ..#.. .#... #.... #####')
+g('a', '..... ..... .###. ....# .#### #...# .####')
+g('b', '#.... #.... #.##. ##..# #...# #...# ####.')
+g('c', '..... ..... .###. #.... #.... #...# .###.')
+g('d', '....# ....# .##.# #..## #...# #...# .####')
+g('e', '..... ..... .###. #...# ##### #.... .###.')
+g('f', '..##. .#..# .#... ###.. .#... .#... .#...')
+g('g', '..... ..... .#### #...# #...# #...# .####', '....# .###.')
+g('h', '#.... #.... #.##. ##..# #...# #...# #...#')
+g('i', '..#.. ..... .##.. ..#.. ..#.. ..#.. .###.')
+g('j', '...#. ..... ..##. ...#. ...#. ...#. ...#.', '#..#. .##..')
+g('k', '#.... #.... #..#. #.#.. ##... #.#.. #..#.')
+g('l', '.##.. ..#.. ..#.. ..#.. ..#.. ..#.. .###.')
+g('m', '..... ..... ##.#. #.#.# #.#.# #...# #...#')
+g('n', '..... ..... #.##. ##..# #...# #...# #...#')
+g('o', '..... ..... .###. #...# #...# #...# .###.')
+g('p', '..... ..... ####. #...# #...# #...# ####.', '#.... #....')
+g('q', '..... ..... .#### #...# #...# #...# .####', '....# ....#')
+g('r', '..... ..... #.##. ##..# #.... #.... #....')
+g('s', '..... ..... .###. #.... .###. ....# ####.')
+g('t', '.#... .#... ###.. .#... .#... .#..# ..##.')
+g('u', '..... ..... #...# #...# #...# #..## .##.#')
+g('v', '..... ..... #...# #...# #...# .#.#. ..#..')
+g('w', '..... ..... #...# #...# #.#.# #.#.# .#.#.')
+g('x', '..... ..... #...# .#.#. ..#.. .#.#. #...#')
+g('y', '..... ..... #...# #...# #...# #...# .####', '....# .###.')
+g('z', '..... ..... ##### ...#. ..#.. .#... #####')
+g('!', '..#.. ..#.. ..#.. ..#.. ..#.. ..... ..#..')
+g('"', '.#.#. .#.#. .#.#. ..... ..... ..... .....')
+g('#', '.#.#. .#.#. ##### .#.#. ##### .#.#. .#.#.')
+g('$', '..#.. .#### #.#.. .###. ..#.# ####. ..#..')
+g('%', '##... ##..# ...#. ..#.. .#... #..## ...##')
+g('&', '.##.. #..#. #.#.. .#... #.#.# #..#. .##.#')
+g("'", '..#.. ..#.. .#... ..... ..... ..... .....')
+g('(', '...#. ..#.. .#... .#... .#... ..#.. ...#.')
+g(')', '.#... ..#.. ...#. ...#. ...#. ..#.. .#...')
+g('*', '..... ..#.. #.#.# .###. #.#.# ..#.. .....')
+g('+', '..... ..#.. ..#.. ##### ..#.. ..#.. .....')
+g(',', '..... ..... ..... ..... .##.. ..#.. .#...')
+g('-', '..... ..... ..... ##### ..... ..... .....')
+g('.', '..... ..... ..... ..... ..... .##.. .##..')
+g('/', '..... ....# ...#. ..#.. .#... #.... .....')
+g(':', '..... .##.. .##.. ..... .##.. .##.. .....')
+g(';', '..... .##.. .##.. ..... .##.. ..#.. .#...')
+g('<', '...#. ..#.. .#... #.... .#... ..#.. ...#.')
+g('=', '..... ..... ##### ..... ##### ..... .....')
+g('>', '.#... ..#.. ...#. ....# ...#. ..#.. .#...')
+g('?', '.###. #...# ....# ...#. ..#.. ..... ..#..')
+g('@', '.###. #...# ....# .##.# #.#.# #.#.# .###.')
+g('[', '.###. .#... .#... .#... .#... .#... .###.')
+g('\\', '..... #.... .#... ..#.. ...#. ....# .....')
+g(']', '.###. ...#. ...#. ...#. ...#. ...#. .###.')
+g('^', '..#.. .#.#. #...# ..... ..... ..... .....')
+g('_', '..... ..... ..... ..... ..... ..... #####')
+g('`', '.#... ..#.. ...#. ..... ..... ..... .....')
+g('{', '...#. ..#.. ..#.. .#... ..#.. ..#.. ...#.')
+g('|', '..#.. ..#.. ..#.. ..#.. ..#.. ..#.. ..#..')
+g('}', '.#... ..#.. ..#.. ...#. ..#.. ..#.. .#...')
+g('~', '..... ..... .#... #.#.# ...#. ..... .....')
+g('°', '.##.. #..#. #..#. .##.. ..... ..... .....')   # degree
+g('µ', '..... ..... #...# #...# #...# #..## ###.#', '#.... #....')  # micro
+g('μ', '..... ..... #...# #...# #...# #..## ###.#', '#.... #....')
+g('Δ', '..... ..#.. .#.#. #...# #...# #...# #####')  # Delta
+g('±', '..#.. ..#.. ##### ..#.. ..#.. ..... #####')
+g('·', '..... ..... ..... .##.. .##.. ..... .....')
+g('•', '..... .###. .###. .###. ..... ..... .....')
+g('×', '..... #...# .#.#. ..#.. .#.#. #...# .....')
+g('÷', '..... ..#.. ..... ##### ..... ..#.. .....')
+g('–', '..... ..... ..... ##### ..... ..... .....')
+g('—', '..... ..... ..... ##### ..... ..... .....')
+g('−', '..... ..... ..... ##### ..... ..... .....')
+g('▌', '###.. ###.. ###.. ###.. ###.. ###.. ###..')
+g('→', '..... ..#.. ...#. ##### ...#. ..#.. .....')
+g('←', '..... ..#.. .#... ##### .#... ..#.. .....')
+g('…', '..... ..... ..... ..... ..... ..... #.#.#')
+g('✓', '..... ....# ...#. #.#.. .#... ..... .....')
+g('²', '.##.. ...#. ..#.. .###. ..... ..... .....')
+g('³', '###.. ..#.. .##.. ###.. ..... ..... .....')
+g('“', '.#.#. .#.#. ..... ..... ..... ..... .....')
+g('”', '.#.#. .#.#. ..... ..... ..... ..... .....')
+g('‘', '..#.. ..#.. ..... ..... ..... ..... .....')
+g('’', '..#.. ..#.. ..... ..... ..... ..... .....')
+g('Ω', '.###. #...# #...# #...# .#.#. .#.#. ##.##')  # Ohm
+g('Ω', '.###. #...# #...# #...# .#.#. .#.#. ##.##')
+g('≤', '...#. ..#.. .#... ..#.. ...#. ..... #####')
+g('≥', '.#... ..#.. ...#. ..#.. .#... ..... #####')
+g('≈', '..... .#... #.#.# ...#. .#... #.#.# ...#.')
+
+CELL, DOT = 100, 100  # one pixel = 100 font units, solid; the app's screen grid draws the gaps
+
+def dot(pen, x, y, size):
+    """One square pixel with its corner on the cell grid, clockwise for TrueType."""
+    pen.moveTo((x, y))
+    pen.lineTo((x, y + size))
+    pen.lineTo((x + size, y + size))
+    pen.lineTo((x + size, y))
+    pen.closePath()
+
+def scale2x(g):
+    h, w = len(g), len(g[0])
+    at = lambda y, x: g[y][x] if 0 <= y < h and 0 <= x < w else 0
+    out = [[0] * (w * 2) for _ in range(h * 2)]
+    for y in range(h):
+        for x in range(w):
+            P, A, B, C, D = at(y, x), at(y - 1, x), at(y, x + 1), at(y, x - 1), at(y + 1, x)
+            out[2*y][2*x] = A if C == A and C != D and A != B else P
+            out[2*y][2*x+1] = B if A == B and A != C and B != D else P
+            out[2*y+1][2*x] = C if D == C and D != B and C != A else P
+            out[2*y+1][2*x+1] = D if B == D and B != A and D != C else P
+    return out
+
+def scale3x(g):
+    h, w = len(g), len(g[0])
+    at = lambda y, x: g[y][x] if 0 <= y < h and 0 <= x < w else 0
+    out = [[0] * (w * 3) for _ in range(h * 3)]
+    for y in range(h):
+        for x in range(w):
+            A, B, C = at(y-1, x-1), at(y-1, x), at(y-1, x+1)
+            D, E, F = at(y, x-1), at(y, x), at(y, x+1)
+            G, H, I = at(y+1, x-1), at(y+1, x), at(y+1, x+1)
+            if B != H and D != F:
+                e = [D if D == B else E,
+                     B if (D == B and E != C) or (B == F and E != A) else E,
+                     F if B == F else E,
+                     D if (D == B and E != G) or (D == H and E != A) else E,
+                     E,
+                     F if (B == F and E != I) or (H == F and E != C) else E,
+                     D if D == H else E,
+                     H if (D == H and E != I) or (H == F and E != G) else E,
+                     F if H == F else E]
+            else:
+                e = [E] * 9
+            for k in range(9):
+                out[3*y + k // 3][3*x + k % 3] = e[k]
+    return out
+
+def bitmap(rows, desc):
+    # 7 rows above the baseline + 2 descender rows, always.
+    full = rows + (desc + ['.....'] * 2)[:2]
+    return [[1 if c == '#' else 0 for c in r] for r in full]
+
+def build(grid, scale):
+    pen = TTGlyphPen(None)
+    above = 7 * scale   # rows above the baseline
+    for i, row in enumerate(grid):
+        for j, v in enumerate(row):
+            if v:
+                dot(pen, CELL * j, CELL * (above - 1 - i) + (CELL - DOT), DOT)
+    return pen.glyph()
+
+def make(path, scale, family, ps):
+    up = {1: lambda g: g, 2: scale2x, 3: scale3x}[scale]
+    names = ['.notdef']
+    glyphs = {'.notdef': build(up(bitmap(['#####', '#...#', '#...#', '#...#', '#...#', '#...#', '#####'], [])), scale)}
+    cmap = {}
+    for ch, (rows, desc) in G.items():
+        assert len(rows) == 7 and all(len(r) == 5 for r in rows + desc), (ch, rows)
+        name = 'uni%04X' % ord(ch)
+        names.append(name)
+        glyphs[name] = build(up(bitmap(rows, desc)), scale)
+        cmap[ord(ch)] = name
+    adv = 6 * scale * CELL
+    asc, desc_ = (7 * scale + 1) * CELL, 2 * scale * CELL + 60
+    fb = FontBuilder(1000, isTTF=True)
+    fb.setupGlyphOrder(names)
+    fb.setupCharacterMap(cmap)
+    fb.setupGlyf(glyphs)
+    fb.setupHorizontalMetrics({n: (adv, 0) for n in names})
+    fb.setupHorizontalHeader(ascent=asc, descent=-desc_)
+    fb.setupNameTable({"familyName": family, "styleName": "Regular", "psName": ps, "fullName": family + " Regular",
+                       "version": "Version 1.0", "copyright": "Original dot-matrix design for Xeno"})
+    fb.setupOS2(sTypoAscender=asc, sTypoDescender=-desc_, sTypoLineGap=0, usWinAscent=asc, usWinDescent=desc_,
+                sxHeight=500 * scale, sCapHeight=700 * scale)
+    fb.setupPost(isFixedPitch=1)
+    fb.save(path)
+    print(ps, len(names), "glyphs")
+
+# Same pixel size in all three; larger text uses more pixels (5x7, 10x14, 15x21).
+out = sys.argv[1] if len(sys.argv) > 1 else "Xeno/Resources/Fonts"
+make(f"{out}/XenoDot.ttf", 1, "Xeno Dot", "XenoDot-Regular")
+make(f"{out}/XenoDotMid.ttf", 2, "Xeno Dot Mid", "XenoDotMid-Regular")
+make(f"{out}/XenoDotBig.ttf", 3, "Xeno Dot Big", "XenoDotBig-Regular")
+
+# Swift glyph bitmaps for the in-app pixel-matrix renderer (VFD theme).
+def swift_rows(grid):
+    out = []
+    for row in grid:
+        v = 0
+        for j, bit in enumerate(row):
+            if bit: v |= 1 << j
+        out.append(str(v))
+    return "[" + ",".join(out) + "]"
+
+lines = ["// Generated by scripts/gen_dot_font.py. Do not edit by hand.",
+         "// Glyph bitmaps for the VFD pixel-matrix renderer: one UInt32 per row, bit 0 = leftmost pixel.",
+         "// small = 5x9 (7 above baseline + 2 descender), mid = 10x18, big = 15x27.", "",
+         "enum PixelFontData {"]
+for label, scale, fn in (("small", 1, lambda g: g), ("mid", 2, scale2x), ("big", 3, scale3x)):
+    lines.append(f"    static let {label}: [UInt32: [UInt32]] = [")
+    for ch, (rows, desc) in G.items():
+        lines.append(f"        {ord(ch)}: {swift_rows(fn(bitmap(rows, desc)))},")
+    lines.append("    ]")
+lines.append("}")
+open("Xeno/Theme/PixelFontData.swift", "w").write("\n".join(lines) + "\n")
+print("PixelFontData.swift written")

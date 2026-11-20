@@ -1,0 +1,93 @@
+# Compiles the app for the simulator, runs the core unit tests, and captures design
+# screenshots in demo mode (simulated probes). The PNGs are committed to screenshots/ on the
+# branch that was built. Runs on every push to a claude/* branch, or by hand.
+name: iOS build & screenshots
+
+on:
+  push:
+    branches: ["claude/**"]
+    paths-ignore: ["screenshots/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: screenshots-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  screenshots:
+    runs-on: macos-26
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode 26 or later
+        run: |
+          xcode=$(ls -d /Applications/Xcode_2[6-9]*.app /Applications/Xcode_[3-9][0-9]*.app 2>/dev/null | sort -V | tail -1)
+          sudo xcode-select -s "$xcode/Contents/Developer"
+          xcodebuild -version
+      - name: Generate project
+        run: brew install --quiet xcodegen && xcodegen generate
+      - name: Build for simulator
+        run: |
+          set -o pipefail
+          xcodebuild -project Xeno.xcodeproj -scheme Xeno -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO build > build.log 2>&1 || {
+              grep -E ': error: ' build.log | sort -u | head -40 | while IFS= read -r l; do echo "::error::$l"; done
+              tail -60 build.log; exit 1; }
+          tail -5 build.log
+      - name: Core unit tests
+        run: set -o pipefail; swift test 2>&1 | tail -15
+      - name: Capture screenshots
+        run: |
+          app=$(find build/Build/Products -name 'Xeno.app' -maxdepth 3 | head -1)
+          udid=$(xcrun simctl list devices available -j | python3 -c '
+          import json,sys
+          d=json.load(sys.stdin)["devices"]
+          c=[x for r,l in d.items() if "iOS" in r for x in l if x["name"].startswith("iPhone") and "Pro" in x["name"] and "Max" not in x["name"]]
+          c=c or [x for r,l in d.items() if "iOS" in r for x in l if x["name"].startswith("iPhone")]
+          print(c[-1]["udid"])')
+          xcrun simctl boot "$udid"; xcrun simctl bootstatus "$udid" -b
+          xcrun simctl status_bar "$udid" override --time "9:41" --batteryState charged --batteryLevel 100 --cellularBars 4 --wifiBars 3
+          xcrun simctl install "$udid" "$app"
+          mkdir -p screenshots
+          shot() {
+            name=$1; theme=$2; shift 2
+            xcrun simctl terminate "$udid" com.lightwave.xeno 2>/dev/null || true
+            xcrun simctl launch "$udid" com.lightwave.xeno -XenoDemo YES -XenoNoBluetooth YES -XenoSampleJob YES -XenoTheme "$theme" "$@"
+            sleep 8
+            xcrun simctl io "$udid" screenshot "screenshots/$name.png"
+          }
+          shot 01-probes biolume -XenoTab probes
+          shot 02-charge biolume -XenoTab charge
+          shot 03-tools biolume -XenoTab tools
+          shot 04-vacuum biolume -XenoTab tools -XenoTool vacuum
+          shot 05-airflow biolume -XenoTab tools -XenoTool airflow
+          shot 06-pt-chart biolume -XenoTab tools -XenoTool pt
+          shot 07-static biolume -XenoTab tools -XenoTool static
+          shot 08-debug-capture biolume -XenoTab tools -XenoTool debug
+          shot 09-jobs biolume -XenoTab jobs
+          shot 10-settings biolume -XenoTab settings
+          shot 11-vfd-probes vfd -XenoTab probes
+          shot 12-vfd-charge vfd -XenoTab charge
+          shot 13-vfd-vacuum vfd -XenoTab tools -XenoTool vacuum
+          shot 14-vfd-tools vfd -XenoTab tools
+          shot 15-vfd-settings vfd -XenoTab settings
+          ls -la screenshots
+      - name: Commit screenshots
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add screenshots
+          git diff --cached --quiet && exit 0
+          git commit -m "Design screenshots for ${GITHUB_SHA::7}"
+          for i in 1 2 3; do git pull --rebase origin "$GITHUB_REF_NAME" && git push origin "HEAD:$GITHUB_REF_NAME" && break; sleep 5; done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshots
+          path: |
+            screenshots
+            build.log
