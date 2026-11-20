@@ -18,6 +18,8 @@ struct FieldpieceDecoder: ProbeAdvertDecoder {
     static let companyID: UInt16 = 0x5046
     let vendor = "Fieldpiece"
     var overrides: [String: ModelLayout] = [:]
+    /// Barometric pressure used to turn absolute probe pressures into gauge (altitude setting).
+    var atmPsia: Double = Units.seaLevelPsia
 
     func layout(for typeCode: String) -> ModelLayout? {
         overrides[typeCode] ?? FieldpieceLayouts.builtIn[typeCode]
@@ -39,7 +41,7 @@ struct FieldpieceDecoder: ProbeAdvertDecoder {
             readings = Self.decodeClampMeter(d)
         } else {
             for field in layout.fields {
-                if let v = field.value(in: d) { readings.append(SensorReading(kind: field.kind, label: field.label, value: v)) }
+                if let v = field.value(in: d, atmPsia: atmPsia) { readings.append(SensorReading(kind: field.kind, label: field.label, value: v)) }
             }
         }
         var battery: Int?
@@ -81,6 +83,7 @@ enum FieldTransform: String, Codable, CaseIterable, Identifiable {
     case kPaGaugeToPsig      // value is kPa gauge
     case kPaAbsToPsig        // value is kPa absolute (sea-level atmosphere subtracted)
     case pascalToInWC
+    case psiaToPsig          // value is absolute psi: gauge = value - barometric pressure
     var id: String { rawValue }
 }
 
@@ -106,7 +109,7 @@ struct FieldLayout: Codable, Hashable, Identifiable {
         }
     }
 
-    func value(in d: [UInt8]) -> Double? {
+    func value(in d: [UInt8], atmPsia: Double = Units.seaLevelPsia) -> Double? {
         guard let raw = rawValue(in: d) else { return nil }
         if raw == -30000 || raw == 0x7FFF || (encoding == .uint16LE && raw == 0xFFFF) { return nil }
         let v = Double(raw) / (divisor == 0 ? 1 : divisor)
@@ -116,6 +119,7 @@ struct FieldLayout: Codable, Hashable, Identifiable {
         case .kPaGaugeToPsig: return v / Units.kPaPerPsi
         case .kPaAbsToPsig: return v / Units.kPaPerPsi - Units.seaLevelPsia
         case .pascalToInWC: return v / 249.0889
+        case .psiaToPsig: return v - atmPsia
         }
     }
 }
@@ -145,8 +149,8 @@ enum FieldpieceLayouts {
                                  FieldLayout(label: "Liquid line", kind: .temperature, offset: 14)],
                         batteryOffset: nil, provenance: "Verified against an SM480V display."),
             ModelLayout(typeCode: "BG", model: "JL3PR", category: .pressure,
-                        fields: [FieldLayout(label: "Pressure", kind: .pressure, offset: 15, divisor: 1, transform: .kPaGaugeToPsig)],
-                        batteryOffset: 22, provenance: "Community-decoded, unverified — confirm against the probe display in Probe Lab."),
+                        fields: [FieldLayout(label: "Pressure", kind: .pressure, offset: 15, encoding: .uint16LE, divisor: 100, transform: .psiaToPsig)],
+                        batteryOffset: 22, provenance: "Field-verified at atmosphere (raw 1470 = 14.70 psia): absolute psi x100, shown as gauge. High-pressure scaling still to confirm."),
             ModelLayout(typeCode: "BH", model: "JL3RH", category: .psychrometer,
                         fields: [FieldLayout(label: "Dry bulb", kind: .temperature, offset: 13),
                                  FieldLayout(label: "Wet bulb", kind: .wetBulb, offset: 15),
@@ -154,10 +158,8 @@ enum FieldpieceLayouts {
                                  FieldLayout(label: "Humidity", kind: .humidity, offset: 19)],
                         batteryOffset: 24, provenance: "Community-decoded, unverified — confirm in Probe Lab."),
             ModelLayout(typeCode: "BX", model: "JL3KM", category: .manometer,
-                        fields: [FieldLayout(label: "Supply", kind: .staticPressure, offset: 8, divisor: 100),
-                                 FieldLayout(label: "Return", kind: .staticPressure, offset: 10, divisor: 100),
-                                 FieldLayout(label: "Differential", kind: .staticPressure, offset: 13, divisor: 100)],
-                        batteryOffset: nil, provenance: "Community-decoded static pressure layout, unverified."),
+                        fields: [FieldLayout(label: "Pressure", kind: .staticPressure, offset: 13, divisor: 100)],
+                        batteryOffset: nil, provenance: "Field-verified: single-port manometer, reading at bytes 13-14 (inWC x100). Use two JL3KMs for supply/return."),
             ModelLayout(typeCode: "BO", model: "SRS3", category: .scale,
                         fields: [FieldLayout(label: "Weight", kind: .weight, offset: 10, encoding: .uint16LE, divisor: 100)],
                         batteryOffset: 16, provenance: "Community-decoded, unverified."),

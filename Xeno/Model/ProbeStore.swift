@@ -94,7 +94,10 @@ final class ProbeStore {
 
     init() {
         if let data = UserDefaults.standard.data(forKey: "xeno.assignments"),
-           let a = try? JSONDecoder().decode([ProbeRole: ChannelRef].self, from: data) { assignments = a }
+           let a = try? JSONDecoder().decode([ProbeRole: ChannelRef].self, from: data) {
+            // JL3KM is single-port: drop assignments made to its old "Supply/Return/Differential" channels.
+            assignments = a.filter { !["Supply", "Return", "Differential"].contains($0.value.label) || !$0.value.probeKey.contains(".BX.") }
+        }
         nicknames = (UserDefaults.standard.dictionary(forKey: "xeno.nicknames") as? [String: String]) ?? [:]
     }
 

@@ -95,6 +95,25 @@ final class FieldpieceDecoderTests: XCTestCase {
         XCTAssertEqual(ad.readings.first?.value, -12.5)
     }
 
+    func testJL3PRAbsoluteHundredths() throws {
+        // Field capture at atmosphere: raw 1470 = 14.70 psia -> ~0 psig.
+        var d: [UInt8] = [0x46, 0x50, 0x42, 0x47, 1, 0, 0x14, 0x87, 0, 0, 0, 0, 0, 0, 0]
+        d += [UInt8(1470 & 0xff), UInt8(1470 >> 8)] + [0, 0, 0, 0, 0, 87]
+        let ad = try XCTUnwrap(FieldpieceDecoder().decode(manufacturerData: d, localName: nil))
+        XCTAssertEqual(try XCTUnwrap(ad.readings.first?.value), 0, accuracy: 0.05)
+        // 132.70 psia at sea level = 118.0 psig
+        d[15] = UInt8(13270 & 0xff); d[16] = UInt8(13270 >> 8)
+        XCTAssertEqual(try XCTUnwrap(FieldpieceDecoder().decode(manufacturerData: d, localName: nil)?.readings.first?.value), 118.0, accuracy: 0.05)
+    }
+
+    func testJL3KMSinglePort() throws {
+        var d: [UInt8] = [0x46, 0x50, 0x42, 0x58, 1, 0, 0x12, 0x17, 0x14, 0x20, 0x20, 0x06, 0]
+        d += [0xFC, 0xFF]   // -0.04 inWC
+        let ad = try XCTUnwrap(FieldpieceDecoder().decode(manufacturerData: d, localName: nil))
+        XCTAssertEqual(ad.readings.count, 1)
+        XCTAssertEqual(ad.readings[0].value, -0.04, accuracy: 0.001)
+    }
+
     func testClampMeter() throws {
         var d: [UInt8] = [0x46, 0x50, 0x43, 0x42, 1, 0, 0, 9, 0, 0, 0, 0, 0]
         d += le(2405) + [1, 0x02] + [0, 0]

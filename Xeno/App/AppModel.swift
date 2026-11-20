@@ -26,7 +26,7 @@ final class AppModel {
 
     var fmt: Fmt { Fmt(s: settings) }
     var refrigerant: RefrigerantTable { Refrigerants.named(settings.refrigerant) ?? Refrigerants.defaultRefrigerant }
-    var decoder: FieldpieceDecoder { FieldpieceDecoder(overrides: lab.overrides) }
+    var decoder: FieldpieceDecoder { FieldpieceDecoder(overrides: lab.overrides, atmPsia: settings.atmPsia) }
 
     func start() {
         // The screenshot workflow runs in the simulator, where Bluetooth doesn't exist.
