@@ -13,14 +13,14 @@ var job = Job(); job.customer = "Sample Customer"; job.address = "123 Example St
 let j = model.jobs.create(job)
 model.jobs.add(JobRecord(title: "Charge check", values: [], verdict: "ok", verdictGood: true), to: j.id)
 
-let palette: [UInt8: (UInt8, UInt8, UInt8)] = [1: (255, 176, 20), 2: (255, 232, 196), 3: (150, 100, 40), 4: (255, 80, 40), 5: (190, 255, 115)]
 let unlit: (UInt8, UInt8, UInt8) = (9, 9, 9)
 
-func render(_ name: String, tab: AppTab, stack: [VFDRoute] = [], scroll: Int = 0) {
+func render(_ name: String, tab: AppTab, stack: [VFDRoute] = [], scroll: Int = 0, blinkOff: Bool = false) {
+    let palette = model.settings.vfdTint.palette.mapValues { (UInt8($0.0 * 255), UInt8($0.1 * 255), UInt8($0.2 * 255)) }
     model.selectedTab = tab
     var st = VFDState(); st.stack = stack; st.scroll = scroll
     let b = VFDFrame.compose(model: model, state: st, cols: cols, rows: rows, topInset: topInset, bottomInset: bottomInset,
-                             now: Date(), actions: .none, select: { _ in })
+                             now: Date(timeIntervalSinceReferenceDate: blinkOff ? 0.5 : 0), actions: .none, select: { _ in })
     let w = cols * px, h = rows * px
     var data = [UInt8](repeating: 0, count: w * h * 3)
     for r in 0..<rows {
@@ -41,14 +41,15 @@ func render(_ name: String, tab: AppTab, stack: [VFDRoute] = [], scroll: Int = 0
 
 render("01-probes", tab: .probes)
 render("02-charge", tab: .charge)
-render("03-charge-scrolled", tab: .charge, scroll: 160)
-render("04-tools", tab: .tools)
-render("05-vacuum", tab: .tools, stack: [.vacuum])
-render("06-pt", tab: .tools, stack: [.pt])
-render("07-airflow", tab: .tools, stack: [.airflow])
-render("08-static", tab: .tools, stack: [.staticP])
-render("09-targetsh", tab: .tools, stack: [.targetSH])
-render("10-jobs", tab: .jobs)
 render("11-setup", tab: .settings)
-render("12-refrigerants", tab: .charge, stack: [.refrigerants])
-if let p = model.probes.probes.first { render("13-probe", tab: .probes, stack: [.probe(p.key)]) }
+// Alarm: subcooling far below target -> flashing banner and blinking hero value.
+model.settings.targetSubcool = 20
+render("20-alarm-on", tab: .charge)
+render("21-alarm-off", tab: .charge, blinkOff: true)
+model.settings.targetSubcool = 10
+for t in VFDTint.allCases {
+    model.settings.vfdTint = t
+    render("3\(VFDTint.allCases.firstIndex(of: t)!)-tint-\(t.rawValue)", tab: .charge)
+}
+model.settings.vfdTint = .green
+render("40-setup-green", tab: .settings)

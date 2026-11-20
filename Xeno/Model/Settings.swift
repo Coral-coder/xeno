@@ -8,6 +8,50 @@ enum ThemeKind: String, Codable, CaseIterable, Identifiable {
 }
 
 
+/// Phosphor colour of the VFD theme.
+enum VFDTint: String, Codable, CaseIterable, Identifiable {
+    case amber, green, teal, red, blue, white, orange
+    var id: String { rawValue }
+    var title: String { rawValue.uppercased() }
+    var subtitle: String {
+        switch self {
+        case .amber: return "CLASSIC AMBER VFD"
+        case .green: return "P1 GREEN PHOSPHOR"
+        case .teal: return "BLUE-GREEN VFD TUBE"
+        case .red: return "RED LED DOT MATRIX"
+        case .blue: return "ICE BLUE VFD"
+        case .white: return "WARM WHITE FILAMENT"
+        case .orange: return "NEON PLASMA ORANGE"
+        }
+    }
+    /// Base phosphor colour, 0...1.
+    var rgb: (Double, Double, Double) {
+        switch self {
+        case .amber: return (1.00, 0.69, 0.08)
+        case .green: return (0.30, 1.00, 0.30)
+        case .teal: return (0.33, 1.00, 0.85)
+        case .red: return (1.00, 0.16, 0.10)
+        case .blue: return (0.35, 0.75, 1.00)
+        case .white: return (1.00, 0.93, 0.82)
+        case .orange: return (1.00, 0.45, 0.10)
+        }
+    }
+
+    /// Display palette derived from the base colour: readouts, text, labels/borders, alarm.
+    var palette: [UInt8: (Double, Double, Double)] {
+        let b = rgb
+        func mix(_ a: (Double, Double, Double), _ c: (Double, Double, Double), _ t: Double) -> (Double, Double, Double) {
+            (a.0 + (c.0 - a.0) * t, a.1 + (c.1 - a.1) * t, a.2 + (c.2 - a.2) * t)
+        }
+        let text = self == .white ? (1.0, 1.0, 1.0) : mix(b, (1.0, 0.96, 0.90), 0.62)
+        let dim = (b.0 * 0.55, b.1 * 0.55, b.2 * 0.55)
+        let alarm: (Double, Double, Double) = (self == .red || self == .orange) ? (1.0, 0.92, 0.35) : (1.0, 0.25, 0.12)
+        var p: [UInt8: (Double, Double, Double)] = [1: b, 2: text, 3: dim, 4: alarm, 5: text]
+        for (i, t) in VFDTint.allCases.enumerated() { p[UInt8(10 + i)] = t.rgb }
+        return p
+    }
+}
+
 struct XenoSettings: Codable, Equatable {
     var temperatureUnit: TemperatureUnit = .fahrenheit
     var pressureUnit: PressureUnit = .psig
@@ -30,6 +74,7 @@ struct XenoSettings: Codable, Equatable {
     var staleSeconds: Double = 20
     var keepAwake: Bool = true
     var theme: ThemeKind = .biolume
+    var vfdTint: VFDTint = .amber
 
     var atmPsia: Double { Units.atmosphericPsia(altitudeFt: altitudeFt) }
 }

@@ -24,22 +24,19 @@ struct Palette {
         textDim: Color(red: 0.62, green: 0.82, blue: 0.75).opacity(0.75),
         design: .rounded)
 
-    static let vfd = Palette(
-        space: Color(red: 0.035, green: 0.020, blue: 0.005),
-        spaceRaised: Color(red: 0.075, green: 0.045, blue: 0.012),
-        alien: Color(red: 1.00, green: 0.69, blue: 0.00),     // VFD amber
-        beam: Color(red: 1.00, green: 0.82, blue: 0.45),      // pale amber
-        nebula: Color(red: 1.00, green: 0.55, blue: 0.10),    // deep orange
-        warn: Color(red: 1.00, green: 0.90, blue: 0.40),
-        danger: Color(red: 1.00, green: 0.28, blue: 0.12),
-        text: Color(red: 1.00, green: 0.92, blue: 0.78),      // warm white filament
-        textDim: Color(red: 1.00, green: 0.70, blue: 0.30).opacity(0.55),
-        design: .monospaced)
+    /// VFD palette, derived from the chosen phosphor colour.
+    static var vfd: Palette {
+        let p = Theme.tint.palette
+        func c(_ i: UInt8) -> Color { let v = p[i]!; return Color(red: v.0, green: v.1, blue: v.2) }
+        return Palette(space: .black, spaceRaised: Color(white: 0.035), alien: c(1), beam: c(2), nebula: c(1),
+                       warn: c(2), danger: c(4), text: c(2), textDim: c(3), design: .monospaced)
+    }
 }
 
 enum Theme {
     /// Set from settings; the root view is rebuilt when it changes.
     static var kind: ThemeKind = .biolume
+    static var tint: VFDTint = .amber
     static var p: Palette { kind == .vfd ? .vfd : .biolume }
     static var isVFD: Bool { kind == .vfd }
 

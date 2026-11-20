@@ -5,6 +5,10 @@ import Foundation
 /// one grid and has the same size. `VFDRootView` paints it.
 enum VFDColor: UInt8 {
     case off = 0, amber, white, dim, red, green
+    // One slot per VFDTint, for colour swatches.
+    case tint0 = 10, tint1, tint2, tint3, tint4, tint5, tint6
+
+    static func tint(_ i: Int) -> VFDColor { VFDColor(rawValue: UInt8(10 + i)) ?? .amber }
 
 }
 

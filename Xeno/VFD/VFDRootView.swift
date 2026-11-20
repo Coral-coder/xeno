@@ -24,7 +24,7 @@ struct VFDRootView: View {
         GeometryReader { geo in
             let insets = geo.safeAreaInsets
             let size = CGSize(width: geo.size.width + insets.leading + insets.trailing, height: geo.size.height + insets.top + insets.bottom)
-            TimelineView(.periodic(from: .now, by: 1)) { ctx in
+            TimelineView(.periodic(from: .now, by: 0.5)) { ctx in
                 let buf = VFDFrame.compose(model: model, state: state,
                                            cols: Int(size.width / pitch), rows: Int(size.height / pitch),
                                            topInset: Int((insets.top / pitch).rounded(.up)),
@@ -103,7 +103,11 @@ struct VFDRootView: View {
                 paths[v, default: Path()].addRect(CGRect(x: CGFloat(c) * pitch, y: CGFloat(r) * pitch, width: lit, height: lit))
             }
         }
-        for (v, path) in paths { g.fill(path, with: .color(VFDColor(rawValue: v)?.color ?? .clear)) }
+        let palette = model.settings.vfdTint.palette
+        for (v, path) in paths {
+            guard let c = palette[v] else { continue }
+            g.fill(path, with: .color(Color(red: c.0, green: c.1, blue: c.2)))
+        }
     }
 
     private static var tileCache: [String: UIImage] = [:]
@@ -144,15 +148,3 @@ struct VFDRootView: View {
     }
 }
 
-extension VFDColor {
-    var color: Color {
-        switch self {
-        case .off: return .clear
-        case .amber: return Color(red: 1.0, green: 0.69, blue: 0.08)
-        case .white: return Color(red: 1.0, green: 0.91, blue: 0.77)
-        case .dim: return Color(red: 0.59, green: 0.39, blue: 0.16)
-        case .red: return Color(red: 1.0, green: 0.31, blue: 0.16)
-        case .green: return Color(red: 0.75, green: 1.0, blue: 0.45)
-        }
-    }
-}

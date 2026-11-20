@@ -9,4 +9,4 @@ final class BluetoothService {
     func start() {}
 }
 
-enum Theme { static var kind: ThemeKind = .biolume }
+enum Theme { static var kind: ThemeKind = .biolume; static var tint: VFDTint = .amber }

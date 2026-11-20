@@ -14,6 +14,27 @@ struct VFDPainter {
     var right: Int { b.cols - 7 }
     var width: Int { right - left }
     var fmt: Fmt { model.fmt }
+
+    /// Alarm blink phase: toggles twice a second (the root redraws every 0.5 s).
+    var blinkOn: Bool { Int(now.timeIntervalSinceReferenceDate * 2) % 2 == 0 }
+    /// Colour that blinks off and on, like an alarm lamp.
+    func blink(_ c: VFDColor) -> VFDColor { blinkOn ? c : .off }
+
+    /// Alarm banner: alternates between a solid inverted block and an outlined one.
+    mutating func alarmBanner(_ title: String, _ detail: String) {
+        let lines = max(1, (b.width(detail) + 6) / max(1, width - 10) + 1)
+        let h = 16 + lines * 10
+        if blinkOn {
+            b.fill(left, y, right, y + h, .red)
+            b.text(left + 5, y + 4, title, maxCols: width - 10, .small, .off)
+            b.paragraph(left + 5, y + 15, detail, maxCols: width - 10, .off)
+        } else {
+            b.box(left, y, right, y + h, .red)
+            b.text(left + 5, y + 4, title, maxCols: width - 10, .small, .red)
+            b.paragraph(left + 5, y + 15, detail, maxCols: width - 10, .red)
+        }
+        y += h + 6
+    }
     var s: XenoSettings { model.settings }
 
     // MARK: Building blocks
@@ -193,8 +214,9 @@ struct VFDPainter {
     mutating func probes() {
         let bt = model.bluetooth.state
         let status: String = model.settings.demoMode ? "* DEMO PROBES" : bt == .scanning ? "* SCANNING" : bt == .poweredOff ? "! BLUETOOTH OFF" : bt == .unauthorized ? "! NO BT PERMISSION" : "* STARTING"
-        b.box(left, y, right, y + 14, .dim)
-        b.text(left + 5, y + 4, status, .small, .amber)
+        let btAlarm = !model.settings.demoMode && (bt == .poweredOff || bt == .unauthorized)
+        b.box(left, y, right, y + 14, btAlarm ? .red : .dim)
+        b.text(left + 5, y + 4, status, .small, btAlarm ? blink(.red) : .amber)
         b.textRight(right - 5, y + 4, "\(model.probes.probes.count) FOUND", .small, .dim)
         y += 20
         if model.probes.probes.isEmpty {
@@ -230,13 +252,15 @@ struct VFDPainter {
             let e = b.text(c0 + 4, r0 + 30, v, .mid, main)
             b.text(e + 2, r0 + 37, u.uppercased(), maxCols: max(0, c1 - e - 6), .small, .dim)
         } else {
-            b.text(c0 + 4, r0 + 34, p.category == .unknown ? "UNKNOWN MODEL" : "NO READING", .small, .red)
+            b.text(c0 + 4, r0 + 34, p.category == .unknown ? "UNKNOWN MODEL" : "NO READING", .small, blink(.red))
         }
         var extra = ""
         if shown.count > 1 { let (v, u) = fmt.reading(shown[1]); extra = "\(v)\(u)" }
         else if let bat = p.battery { extra = "BAT \(bat)%" }
+        let lowBattery = (p.battery ?? 100) < 20 && !stale
+        if lowBattery { extra = "LOW BAT \(p.battery ?? 0)%" }
         if stale { extra = "OFFLINE" }
-        b.text(c0 + 4, r0 + 48, extra.uppercased(), maxCols: c1 - c0 - 22, .small, stale ? .red : .dim)
+        b.text(c0 + 4, r0 + 48, extra.uppercased(), maxCols: c1 - c0 - 22, .small, stale || lowBattery ? blink(.red) : .dim)
         let level = stale ? 0 : p.rssi > -60 ? 4 : p.rssi > -70 ? 3 : p.rssi > -80 ? 2 : 1
         for bar in 0..<4 {
             let h = 2 + bar * 2
@@ -322,18 +346,22 @@ struct VFDPainter {
         // Diagnosis banner.
         let d = res.diagnosis
         let detail = d == .needsData ? "TAP -- TO ENTER A VALUE BY HAND" : d.detail.uppercased()
-        let lines = max(1, (b.width(detail) + 6) / max(1, width - 10) + 1)
-        let h = 16 + lines * 10
-        if d == .needsData {
-            b.box(left, y, right, y + h, .dim)
-            b.text(left + 5, y + 4, d.rawValue.uppercased(), maxCols: width - 10, .small, .white)
-            b.paragraph(left + 5, y + 15, detail, maxCols: width - 10, .dim)
+        if d != .needsData && !d.isGood {
+            alarmBanner("! " + d.rawValue.uppercased(), detail)
         } else {
-            b.fill(left, y, right, y + h, d.isGood ? .amber : .red)
-            b.text(left + 5, y + 4, d.rawValue.uppercased(), maxCols: width - 10, .small, .off)
-            b.paragraph(left + 5, y + 15, detail, maxCols: width - 10, .off)
+            let lines = max(1, (b.width(detail) + 6) / max(1, width - 10) + 1)
+            let h = 16 + lines * 10
+            if d == .needsData {
+                b.box(left, y, right, y + h, .dim)
+                b.text(left + 5, y + 4, d.rawValue.uppercased(), maxCols: width - 10, .small, .white)
+                b.paragraph(left + 5, y + 15, detail, maxCols: width - 10, .dim)
+            } else {
+                b.fill(left, y, right, y + h, .amber)
+                b.text(left + 5, y + 4, d.rawValue.uppercased(), maxCols: width - 10, .small, .off)
+                b.paragraph(left + 5, y + 15, detail, maxCols: width - 10, .off)
+            }
+            y += h + 6
         }
-        y += h + 6
         // Air side.
         let ret = model.air(.returnAir), sup = model.air(.supplyAir)
         panel(.dim) { me in
@@ -380,8 +408,10 @@ struct VFDPainter {
         b.textRight(right - 5, y, target.map { "TARGET " + fmt.delta($0) } ?? "TARGET --", .small, .dim)
         y += 11
         var color: VFDColor = .amber
-        if let v = valueF, let t = target, abs(v - t) > tolerance * 2 { color = .red }
-        let e = b.text(left + 5, y, valueF.map { tu.deltaFromF($0).formatted(decimals: 1) } ?? "--", .big, valueF == nil ? .dim : color)
+        var alarm = false
+        if let v = valueF, let t = target, abs(v - t) > tolerance * 2 { color = .red; alarm = true }
+        let e = b.text(left + 5, y, valueF.map { tu.deltaFromF($0).formatted(decimals: 1) } ?? "--", .big,
+                       valueF == nil ? .dim : (alarm ? blink(color) : color))
         b.text(e + 2, y + 15, fmt.dUnit, .small, .dim)
         let span = max(tolerance * 5, 10)
         let marker = (valueF != nil && target != nil) ? (valueF! - target!) / span * 0.5 + 0.5 : nil
@@ -481,10 +511,12 @@ struct VFDPainter {
         if let start = decayStart {
             let verdict = VacuumAnalysis.verdict(samples: decay, limit: s.vacuumDecayLimit, holdSeconds: s.vacuumHoldMinutes * 60)
             let el = Int(now.timeIntervalSince(start))
-            panel(verdict == .pass ? .amber : verdict == .running ? .dim : .red) { me in
+            let failed = verdict == .leak || verdict == .moisture
+            panel(verdict == .pass ? .amber : verdict == .running ? .dim : (failed ? blink(.red) : .red)) { me in
                 me.row("ELAPSED", String(format: "%d:%02d", el / 60, el % 60), .amber)
                 me.row("RISE", ((decay.last?.value ?? 0) - (decay.first?.value ?? 0)).formatted(decimals: 0) + " µ")
-                me.y = me.b.paragraph(me.left + 5, me.y + 2, verdict.rawValue.uppercased(), maxCols: me.width - 10, verdict == .pass ? .amber : verdict == .running ? .white : .red)
+                me.y = me.b.paragraph(me.left + 5, me.y + 2, verdict.rawValue.uppercased(), maxCols: me.width - 10,
+                                      verdict == .pass ? .amber : verdict == .running ? .white : me.blink(.red))
                 me.b.chart(me.left + 5, me.y + 2, me.right - 5, me.y + 40, values: decay.map(\.value), threshold: me.s.vacuumDecayLimit)
                 me.y += 46
             }
@@ -554,7 +586,7 @@ struct VFDPainter {
                 me.y = me.b.paragraph(me.left + 5, me.y, "OUTSIDE THE CHART: CHARGE BY WEIGHT.", maxCols: me.width - 10, .red)
             } else if let target, let actual {
                 let msg = actual > target + 5 ? "HIGH: ADD REFRIGERANT" : actual < target - 5 ? "LOW: RECOVER REFRIGERANT" : "ON TARGET"
-                me.b.text(me.left + 5, me.y, msg, .small, abs(actual - target) <= 5 ? .amber : .red); me.y += 12
+                me.b.text(me.left + 5, me.y, msg, .small, abs(actual - target) <= 5 ? .amber : me.blink(.red)); me.y += 12
             }
         }
         y = b.paragraph(left, y, "FIXED ORIFICE ONLY. (3 X INDOOR WB - 80 - OUTDOOR DB) / 2.", maxCols: width, .dim)
@@ -571,13 +603,13 @@ struct VFDPainter {
             me.y += 34
             me.b.text(me.left + 5, me.y, "TOTAL EXTERNAL STATIC " + me.s.staticUnit.rawValue.uppercased(), .small, .dim); me.y += 11
             let color: VFDColor = tesp.map { $0 <= rated ? .amber : .red } ?? .dim
-            me.b.text(me.left + 5, me.y, me.fmt.stat(tesp), .big, color)
+            me.b.text(me.left + 5, me.y, me.fmt.stat(tesp), .big, color == .red ? me.blink(.red) : color)
             me.y += 30
             me.b.bar(me.left + 5, me.right - 5, me.y, marker: tesp.map { min(1, $0 / (rated * 2)) }, zone: 0...0.5, color: color == .dim ? .amber : color)
             me.y += 8
             me.row("RATED MAX", me.fmt.stat(rated) + " " + me.s.staticUnit.rawValue.uppercased())
             if let tesp {
-                me.b.text(me.left + 5, me.y, tesp <= rated ? "WITHIN RATING" : "OVER RATED: CHECK FILTER, COIL, DUCTS", maxCols: me.width - 10, .small, tesp <= rated ? .amber : .red)
+                me.b.text(me.left + 5, me.y, tesp <= rated ? "WITHIN RATING" : "! OVER RATED: CHECK FILTER, COIL, DUCTS", maxCols: me.width - 10, .small, tesp <= rated ? .amber : me.blink(.red))
                 me.y += 12
             }
         }
@@ -643,8 +675,24 @@ struct VFDPainter {
     mutating func setup() {
         let m = model, a = actions
         heading("APPEARANCE")
-        options(["BIOLUMINESCENT", "AMBER VFD"], selected: s.theme == .vfd ? 1 : 0) { i in m.settings.theme = i == 0 ? .biolume : .vfd }
+        options(["BIOLUMINESCENT", "VFD"], selected: s.theme == .vfd ? 1 : 0) { i in m.settings.theme = i == 0 ? .biolume : .vfd }
         gap(2)
+        heading("DISPLAY COLOR")
+        let tints = VFDTint.allCases
+        let sw = (width - (tints.count - 1) * 3) / tints.count
+        for (i, t) in tints.enumerated() {
+            let c0 = left + i * (sw + 3)
+            if t == s.vfdTint {
+                b.box(c0, y, c0 + sw, y + 15, .white)
+                b.fill(c0 + 2, y + 2, c0 + sw - 2, y + 13, .tint(i))
+            } else {
+                b.fill(c0, y, c0 + sw, y + 15, .tint(i))
+            }
+            b.hit(c0 - 1, y - 2, c0 + sw + 1, y + 17) { m.settings.vfdTint = t }
+        }
+        y += 20
+        b.text(left, y, s.vfdTint.title + " - " + s.vfdTint.subtitle, maxCols: width, .small, .amber)
+        y += 14
         heading("UNITS")
         panel(.dim) { me in
             func cycle<T: CaseIterable & Equatable>(_ v: T) -> T {
