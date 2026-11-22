@@ -120,8 +120,11 @@ final class FieldpieceDecoderTests: XCTestCase {
         let d = hex.split(separator: " ").map { UInt8($0, radix: 16)! }
         let ad = try XCTUnwrap(FieldpieceDecoder().decode(manufacturerData: d, localName: nil))
         XCTAssertEqual(ad.serial, "3292")
-        XCTAssertEqual(ad.readings.map(\.label), ["Pressure"])
-        XCTAssertEqual(ad.readings[0].value, 0)
+        // Manifold screen at capture: low 39.1 psig, T1 76.8 F, T2 75.1 F.
+        XCTAssertEqual(ad.readings.map(\.label), ["Low side", "High side", "Suction line", "Liquid line"])
+        XCTAssertEqual(ad.readings[0].value, 39.2, accuracy: 0.001)
+        XCTAssertEqual(ad.readings[2].value, 76.9, accuracy: 0.001)
+        XCTAssertEqual(ad.readings[3].value, 75.1, accuracy: 0.001)
     }
 
     func testClampMeter() throws {
