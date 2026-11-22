@@ -163,6 +163,11 @@ enum FieldpieceLayouts {
             ModelLayout(typeCode: "BO", model: "SRS3", category: .scale,
                         fields: [FieldLayout(label: "Weight", kind: .weight, offset: 10, encoding: .uint16LE, divisor: 100)],
                         batteryOffset: 16, provenance: "Community-decoded, unverified."),
+            ModelLayout(typeCode: "CP", model: "Single manifold", category: .pressure,
+                        fields: [FieldLayout(label: "Pressure", kind: .pressure, offset: 20),
+                                 FieldLayout(label: "Line temp", kind: .temperature, offset: 22)],
+                        batteryOffset: nil,
+                        provenance: "Provisional, from a field capture at atmosphere: pressure psig x10 at bytes 20-21 (read 0.0), clamp temperature at 22-23 (-30000 = no clamp). Confirm under pressure."),
             ModelLayout(typeCode: "CB", model: "SC680", category: .multimeter, fields: [],
                         batteryOffset: nil, special: .clampMeter, provenance: "Community-decoded mode/range layout."),
         ]

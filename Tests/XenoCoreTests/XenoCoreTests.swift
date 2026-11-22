@@ -114,6 +114,16 @@ final class FieldpieceDecoderTests: XCTestCase {
         XCTAssertEqual(ad.readings[0].value, -0.04, accuracy: 0.001)
     }
 
+    func testSingleManifoldCapture() throws {
+        // Real broadcast from a single-port manifold at atmosphere, no clamp connected.
+        let hex = "46 50 43 50 25 02 32 92 88 01 0F 00 01 03 EF 02 92 20 A1 07 00 00 D0 8A 58 02 31 01 66"
+        let d = hex.split(separator: " ").map { UInt8($0, radix: 16)! }
+        let ad = try XCTUnwrap(FieldpieceDecoder().decode(manufacturerData: d, localName: nil))
+        XCTAssertEqual(ad.serial, "3292")
+        XCTAssertEqual(ad.readings.map(\.label), ["Pressure"])
+        XCTAssertEqual(ad.readings[0].value, 0)
+    }
+
     func testClampMeter() throws {
         var d: [UInt8] = [0x46, 0x50, 0x43, 0x42, 1, 0, 0, 9, 0, 0, 0, 0, 0]
         d += le(2405) + [1, 0x02] + [0, 0]
