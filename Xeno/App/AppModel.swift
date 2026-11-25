@@ -21,6 +21,7 @@ final class AppModel {
         Theme.kind = settings.theme
         Theme.tint = settings.vfdTint
         probes.autoAssign = settings.autoAssign
+        probes.staleAfter = settings.staleSeconds
         bluetooth = BluetoothService(model: self)
         demo = DemoSource(model: self)
     }
@@ -102,6 +103,7 @@ final class AppModel {
     }
 
     private func persistSettings() {
+        probes.staleAfter = settings.staleSeconds
         Theme.kind = settings.theme
         Theme.tint = settings.vfdTint
         probes.autoAssign = settings.autoAssign

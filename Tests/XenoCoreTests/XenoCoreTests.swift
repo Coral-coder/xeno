@@ -143,6 +143,15 @@ final class FieldpieceDecoderTests: XCTestCase {
     }
 }
 
+final class FormatTests: XCTestCase {
+    func testNoNegativeZero() {
+        XCTAssertEqual((-0.04).formatted(decimals: 1), "0.0")
+        XCTAssertEqual((-0.0).formatted(decimals: 2), "0.00")
+        XCTAssertEqual((-0.06).formatted(decimals: 1), "-0.1")
+        XCTAssertEqual((-0.04).formatted(decimals: 2), "-0.04")
+    }
+}
+
 final class TestMathTests: XCTestCase {
     func testPressureCompensation() {
         let p = PressureTest.expectedPsig(startPsig: 300, startTempF: 70, nowTempF: 60, atmPsia: Units.seaLevelPsia)

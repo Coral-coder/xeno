@@ -90,6 +90,8 @@ final class ProbeStore {
     var assignments: [ProbeRole: ChannelRef] = [:] { didSet { saveAssignments() } }
     var nicknames: [String: String] = [:] { didSet { UserDefaults.standard.set(nicknames, forKey: "xeno.nicknames") } }
     var autoAssign = true
+    /// Seconds without a broadcast before a probe counts as offline (from settings).
+    var staleAfter: Double = 20
     private let historyLimit = 7200
 
     init() {
@@ -158,8 +160,14 @@ final class ProbeStore {
     /// Fills empty roles in Job Link order: 1st pressure probe → suction, 2nd → liquid, etc.
     private func autoAssignRoles(for p: Probe) {
         guard roles(of: p).isEmpty else { return }
+        // A position is free if nobody holds it, or its probe is gone / offline.
+        func free(_ role: ProbeRole) -> Bool {
+            guard let ref = assignments[role] else { return true }
+            guard let holder = probe(ref.probeKey) else { return true }
+            return holder.key != p.key && holder.isStale(now: .now, after: staleAfter)
+        }
         func take(_ candidates: [ProbeRole], label: String? = nil) -> Bool {
-            for role in candidates where assignments[role] == nil {
+            for role in candidates where free(role) {
                 assign(role, to: p, label: label); return true
             }
             return false
@@ -170,12 +178,10 @@ final class ProbeStore {
         case .psychrometer: _ = take([.returnAir, .supplyAir, .outdoorAir])
         case .vacuum: _ = take([.vacuum])
         case .manometer:
-            if assignments[.staticSupply] == nil, p.reading("Supply") != nil { assign(.staticSupply, to: p, label: "Supply") }
-            if assignments[.staticReturn] == nil, p.reading("Return") != nil { assign(.staticReturn, to: p, label: "Return") }
-            if p.reading("Supply") == nil { _ = take([.staticSupply, .staticReturn]) }
+            _ = take([.staticSupply, .staticReturn])
         case .manifold:
             let map: [(ProbeRole, String)] = [(.suctionPressure, "Low side"), (.liquidPressure, "High side"), (.suctionLine, "Suction line"), (.liquidLine, "Liquid line")]
-            for (role, label) in map where assignments[role] == nil && p.reading(label) != nil { assign(role, to: p, label: label) }
+            for (role, label) in map where free(role) && p.reading(label) != nil { assign(role, to: p, label: label) }
         default: break
         }
     }

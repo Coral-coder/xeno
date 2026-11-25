@@ -85,5 +85,10 @@ enum Units {
 }
 
 extension Double {
-    func formatted(decimals: Int) -> String { String(format: "%.\(decimals)f", self) }
+    /// Fixed decimals; values that round to zero print as 0 (never "-0.0").
+    func formatted(decimals: Int) -> String {
+        let scale = pow(10, Double(decimals))
+        let v = (self * scale).rounded() == 0 ? 0 : self
+        return String(format: "%.\(decimals)f", v)
+    }
 }
