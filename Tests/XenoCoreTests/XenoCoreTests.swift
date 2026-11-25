@@ -98,11 +98,11 @@ final class FieldpieceDecoderTests: XCTestCase {
     func bytes(_ hex: String) -> [UInt8] { hex.split(separator: " ").map { UInt8($0, radix: 16)! } }
 
     func testJL3PRFieldCapture() throws {
-        // Real broadcasts: live psia x100 at 17-18, probe barometer at 15-16.
-        let p1487 = try XCTUnwrap(FieldpieceDecoder().decode(manufacturerData: bytes("46 50 42 47 21 05 14 87 04 20 20 02 06 09 10 BD 05 11 10 7D 0F 10 FE 03 03 1F 34"), localName: nil))
-        XCTAssertEqual(try XCTUnwrap(p1487.readings.first?.value), 41.13 - 14.69, accuracy: 0.001)
-        let p1488 = try XCTUnwrap(FieldpieceDecoder().decode(manufacturerData: bytes("46 50 42 47 21 05 14 88 14 20 20 02 06 EA 05 BE 05 FB 05 68 05 10 FE 03 08 1F 28"), localName: nil))
-        XCTAssertEqual(try XCTUnwrap(p1488.readings.first?.value), 15.31 - 14.70, accuracy: 0.001)
+        // Real broadcasts with the probe displays noted: 347.9 and 128.9 psig.
+        let p1488 = try XCTUnwrap(FieldpieceDecoder().decode(manufacturerData: bytes("46 50 42 47 21 05 14 88 14 20 20 02 06 14 0E BE 05 2B 0E 97 0D 10 FE 03 09 16 07"), localName: nil))
+        XCTAssertEqual(try XCTUnwrap(p1488.readings.first?.value), 347.9, accuracy: 0.001)
+        let p1487 = try XCTUnwrap(FieldpieceDecoder().decode(manufacturerData: bytes("46 50 42 47 21 05 14 87 04 20 20 02 06 95 05 BD 05 9D 05 09 05 10 FE 03 04 16 20"), localName: nil))
+        XCTAssertEqual(try XCTUnwrap(p1487.readings.first?.value), 128.9, accuracy: 0.001)
     }
 
     func testJL3RHFieldCapture() throws {

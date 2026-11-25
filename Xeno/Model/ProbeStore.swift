@@ -104,6 +104,11 @@ final class ProbeStore {
         }
         nicknames = (UserDefaults.standard.dictionary(forKey: "xeno.nicknames") as? [String: String]) ?? [:]
         zeroOffsets = (UserDefaults.standard.dictionary(forKey: "xeno.zeroOffsets") as? [String: Double]) ?? [:]
+        // Build 8 decoded JL3PR from the wrong field; zeros taken then are invalid.
+        if !UserDefaults.standard.bool(forKey: "xeno.zeroReset.jl3pr") {
+            zeroOffsets = zeroOffsets.filter { !$0.key.contains(".BG.") }
+            UserDefaults.standard.set(true, forKey: "xeno.zeroReset.jl3pr")
+        }
     }
 
     private func saveAssignments() {

@@ -48,8 +48,8 @@ final class DemoSource {
         let pad5: [UInt8] = [0, 0, 0, 0, 0]
         // JL3PR suction / liquid (kPa gauge at 15–16)
         let suction = 118.5 + wob(1.6, 23), liquid = 338 + wob(3, 31, 4)
-        send(packet("BG", serial: 0x4A21, body: pad5 + [0, 0] + leU(model.settings.atmPsia) + leU(suction + model.settings.atmPsia) + [0, 0, 0, 87]), -58)
-        send(packet("BG", serial: 0x4A22, body: pad5 + [0, 0] + leU(model.settings.atmPsia) + leU(liquid + model.settings.atmPsia) + [0, 0, 0, 74]), -61)
+        send(packet("BG", serial: 0x4A21, body: pad5 + [0, 0, 0, 0, 0, 0] + le(suction) + [0, 0, 0, 87]), -58)
+        send(packet("BG", serial: 0x4A22, body: pad5 + [0, 0, 0, 0, 0, 0] + le(liquid) + [0, 0, 0, 74]), -61)
         // JL3PC suction / liquid line
         send(packet("BF", serial: 0x8791, body: pad5 + le(50.6 + wob(0.6, 19)) + [0, 0]), -55)
         send(packet("BF", serial: 0x8792, body: pad5 + le(93.4 + wob(0.5, 27)) + [0, 0]), -63)
