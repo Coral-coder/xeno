@@ -44,6 +44,19 @@ struct FieldpieceDecoder: ProbeAdvertDecoder {
                 if let v = field.value(in: d, atmPsia: atmPsia) { readings.append(SensorReading(kind: field.kind, label: field.label, value: v)) }
             }
         }
+        // JL3PR: gauge against the probe's own barometer (bytes 15-16) when it reports one.
+        if layout.special == .jl3pr, d.count > 18, let i = readings.firstIndex(where: { $0.kind == .pressure }) {
+            let baro = Double(UInt16(d[15]) | UInt16(d[16]) << 8) / 100
+            let live = Double(UInt16(d[17]) | UInt16(d[18]) << 8) / 100
+            if baro > 8, baro < 16 { readings[i].value = live - baro }
+        }
+        // Psychrometers: derive wet bulb and dew point from dry bulb + RH.
+        if let db = readings.first(where: { $0.kind == .temperature })?.value,
+           let rh = readings.first(where: { $0.kind == .humidity })?.value,
+           !readings.contains(where: { $0.kind == .wetBulb }), rh > 0, rh <= 100 {
+            readings.append(SensorReading(kind: .wetBulb, label: "Wet bulb", value: Psychrometrics.wetBulbF(dryBulbF: db, rh: rh, psia: atmPsia)))
+            readings.append(SensorReading(kind: .dewPoint, label: "Dew point", value: Psychrometrics.dewPointF(dryBulbF: db, rh: rh)))
+        }
         var battery: Int?
         if let b = layout.batteryOffset, b < d.count, d[b] <= 100 { battery = Int(d[b]) }
         return ProbeAdvert(vendor: vendor, model: layout.model, typeCode: typeCode, serial: serial, firmware: firmware,
@@ -125,7 +138,7 @@ struct FieldLayout: Codable, Hashable, Identifiable {
 }
 
 struct ModelLayout: Codable, Hashable {
-    enum Special: String, Codable { case clampMeter }
+    enum Special: String, Codable { case clampMeter, jl3pr }
     var typeCode: String
     var model: String
     var category: ProbeCategory
@@ -149,14 +162,13 @@ enum FieldpieceLayouts {
                                  FieldLayout(label: "Liquid line", kind: .temperature, offset: 14)],
                         batteryOffset: nil, provenance: "Verified against an SM480V display."),
             ModelLayout(typeCode: "BG", model: "JL3PR", category: .pressure,
-                        fields: [FieldLayout(label: "Pressure", kind: .pressure, offset: 15, encoding: .uint16LE, divisor: 100, transform: .psiaToPsig)],
-                        batteryOffset: 22, provenance: "Field-verified at atmosphere (raw 1470 = 14.70 psia): absolute psi x100, shown as gauge. High-pressure scaling still to confirm."),
+                        fields: [FieldLayout(label: "Pressure", kind: .pressure, offset: 17, encoding: .uint16LE, divisor: 100, transform: .psiaToPsig)],
+                        batteryOffset: nil, special: .jl3pr,
+                        provenance: "Field capture: live sensor psia x100 at bytes 17-18, the probe's own barometer at 15-16; gauge = live - barometer. Confirm against a reference gauge."),
             ModelLayout(typeCode: "BH", model: "JL3RH", category: .psychrometer,
                         fields: [FieldLayout(label: "Dry bulb", kind: .temperature, offset: 13),
-                                 FieldLayout(label: "Wet bulb", kind: .wetBulb, offset: 15),
-                                 FieldLayout(label: "Dew point", kind: .dewPoint, offset: 17),
                                  FieldLayout(label: "Humidity", kind: .humidity, offset: 19)],
-                        batteryOffset: 24, provenance: "Community-decoded, unverified — confirm in Probe Lab."),
+                        batteryOffset: nil, provenance: "Field capture: dry bulb at 13-14, RH at 19-20 (x10). Wet bulb and dew point are computed."),
             ModelLayout(typeCode: "BX", model: "JL3KM", category: .manometer,
                         fields: [FieldLayout(label: "Pressure", kind: .staticPressure, offset: 13, divisor: 100)],
                         batteryOffset: nil, provenance: "Field-verified: single-port manometer, reading at bytes 13-14 (inWC x100). Use two JL3KMs for supply/return."),

@@ -94,6 +94,13 @@ struct ProbeDetailView: View {
                     }
                 }
 
+                if probe.readings.contains(where: { $0.kind == .pressure || $0.kind == .staticPressure }) {
+                    Button { model.probes.zeroPressure(probe) } label: { Label("Zero pressure (open to air)", systemImage: "scope") }
+                        .buttonStyle(GlowButtonStyle(color: Theme.beam))
+                    if model.probes.hasZero(probe) {
+                        Button("Clear zero") { model.probes.clearZero(probe) }.font(Theme.font(.caption))
+                    }
+                }
                 Button("Forget probe", role: .destructive) { model.probes.forget(probe); dismiss() }
                     .buttonStyle(GlowButtonStyle(color: Theme.danger))
             }

@@ -300,6 +300,10 @@ struct VFDPainter {
         y = b.paragraph(left, y, p.raw.map { String(format: "%02X", $0) }.joined(separator: " "), maxCols: width, .dim)
         gap(6)
         let a = actions
+        if p.readings.contains(where: { $0.kind == .pressure || $0.kind == .staticPressure }) {
+            button("ZERO PRESSURE (OPEN TO AIR)") { store.zeroPressure(p) }
+            if store.hasZero(p) { button("CLEAR ZERO", inverted: false) { store.clearZero(p) } }
+        }
         button("FORGET PROBE", color: .red) { store.forget(p); a.pop() }
     }
 

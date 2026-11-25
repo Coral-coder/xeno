@@ -89,6 +89,8 @@ final class ProbeStore {
     private(set) var probes: [Probe] = []
     var assignments: [ProbeRole: ChannelRef] = [:] { didSet { saveAssignments() } }
     var nicknames: [String: String] = [:] { didSet { UserDefaults.standard.set(nicknames, forKey: "xeno.nicknames") } }
+    /// Per-channel zero offsets ("probeKey|label" -> value subtracted), set with Zero pressure.
+    var zeroOffsets: [String: Double] = [:] { didSet { UserDefaults.standard.set(zeroOffsets, forKey: "xeno.zeroOffsets") } }
     var autoAssign = true
     /// Seconds without a broadcast before a probe counts as offline (from settings).
     var staleAfter: Double = 20
@@ -101,6 +103,7 @@ final class ProbeStore {
             assignments = a.filter { !["Supply", "Return", "Differential"].contains($0.value.label) || !$0.value.probeKey.contains(".BX.") }
         }
         nicknames = (UserDefaults.standard.dictionary(forKey: "xeno.nicknames") as? [String: String]) ?? [:]
+        zeroOffsets = (UserDefaults.standard.dictionary(forKey: "xeno.zeroOffsets") as? [String: Double]) ?? [:]
     }
 
     private func saveAssignments() {
@@ -122,10 +125,13 @@ final class ProbeStore {
         p.model = ad.model; p.category = ad.category; p.firmware = ad.firmware
         if let b = ad.battery { p.battery = b }
         p.rssi = rssi; p.raw = ad.raw; p.packets += 1
-        p.readings = ad.readings
+        p.readings = ad.readings.map { r in
+            guard r.kind == .pressure || r.kind == .staticPressure, let z = zeroOffsets["\(ad.key)|\(r.label)"] else { return r }
+            var r = r; r.value -= z; return r
+        }
         let last = p.lastSeen
         p.lastSeen = now
-        for r in ad.readings {
+        for r in p.readings {
             var h = p.history[r.id] ?? []
             if let tail = h.last, now.timeIntervalSince(tail.t) < 1, now.timeIntervalSince(last) < 5 { continue }
             h.append(TimedSample(t: now, value: r.value))
@@ -134,6 +140,20 @@ final class ProbeStore {
         }
         if autoAssign { autoAssignRoles(for: p) }
     }
+
+    /// Treat the current pressure readings as zero (probe open to atmosphere).
+    func zeroPressure(_ p: Probe) {
+        for r in p.readings where r.kind == .pressure || r.kind == .staticPressure {
+            let k = "\(p.key)|\(r.label)"
+            zeroOffsets[k] = (zeroOffsets[k] ?? 0) + r.value
+        }
+    }
+
+    func clearZero(_ p: Probe) {
+        for k in zeroOffsets.keys where k.hasPrefix(p.key + "|") { zeroOffsets[k] = nil }
+    }
+
+    func hasZero(_ p: Probe) -> Bool { zeroOffsets.keys.contains { $0.hasPrefix(p.key + "|") } }
 
     func rename(_ p: Probe, to name: String) {
         p.nickname = name

@@ -95,15 +95,23 @@ final class FieldpieceDecoderTests: XCTestCase {
         XCTAssertEqual(ad.readings.first?.value, -12.5)
     }
 
-    func testJL3PRAbsoluteHundredths() throws {
-        // Field capture at atmosphere: raw 1470 = 14.70 psia -> ~0 psig.
-        var d: [UInt8] = [0x46, 0x50, 0x42, 0x47, 1, 0, 0x14, 0x87, 0, 0, 0, 0, 0, 0, 0]
-        d += [UInt8(1470 & 0xff), UInt8(1470 >> 8)] + [0, 0, 0, 0, 0, 87]
-        let ad = try XCTUnwrap(FieldpieceDecoder().decode(manufacturerData: d, localName: nil))
-        XCTAssertEqual(try XCTUnwrap(ad.readings.first?.value), 0, accuracy: 0.05)
-        // 132.70 psia at sea level = 118.0 psig
-        d[15] = UInt8(13270 & 0xff); d[16] = UInt8(13270 >> 8)
-        XCTAssertEqual(try XCTUnwrap(FieldpieceDecoder().decode(manufacturerData: d, localName: nil)?.readings.first?.value), 118.0, accuracy: 0.05)
+    func bytes(_ hex: String) -> [UInt8] { hex.split(separator: " ").map { UInt8($0, radix: 16)! } }
+
+    func testJL3PRFieldCapture() throws {
+        // Real broadcasts: live psia x100 at 17-18, probe barometer at 15-16.
+        let p1487 = try XCTUnwrap(FieldpieceDecoder().decode(manufacturerData: bytes("46 50 42 47 21 05 14 87 04 20 20 02 06 09 10 BD 05 11 10 7D 0F 10 FE 03 03 1F 34"), localName: nil))
+        XCTAssertEqual(try XCTUnwrap(p1487.readings.first?.value), 41.13 - 14.69, accuracy: 0.001)
+        let p1488 = try XCTUnwrap(FieldpieceDecoder().decode(manufacturerData: bytes("46 50 42 47 21 05 14 88 14 20 20 02 06 EA 05 BE 05 FB 05 68 05 10 FE 03 08 1F 28"), localName: nil))
+        XCTAssertEqual(try XCTUnwrap(p1488.readings.first?.value), 15.31 - 14.70, accuracy: 0.001)
+    }
+
+    func testJL3RHFieldCapture() throws {
+        let ad = try XCTUnwrap(FieldpieceDecoder().decode(manufacturerData: bytes("46 50 42 48 26 03 51 70 04 20 26 03 25 DE 02 A5 02 EB 02 89 02 8B 0C 10 F4 03 0A 04 38"), localName: nil))
+        XCTAssertEqual(ad.readings.first { $0.kind == .temperature }?.value, 73.4)
+        XCTAssertEqual(ad.readings.first { $0.kind == .humidity }?.value, 64.9)
+        let wb = try XCTUnwrap(ad.readings.first { $0.kind == .wetBulb }?.value)
+        let dp = try XCTUnwrap(ad.readings.first { $0.kind == .dewPoint }?.value)
+        XCTAssertLessThan(dp, wb); XCTAssertLessThan(wb, 73.4)
     }
 
     func testJL3KMSinglePort() throws {
